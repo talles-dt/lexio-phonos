@@ -19,6 +19,7 @@ import {
   applyWindow,
 } from './audio';
 import { comparePitchContour, generateSyntheticPitchContour } from './pitchAnalysis';
+import { trackFormants } from './formantTracker';
 
 // Default scoring configuration
 const DEFAULT_SCORING_CONFIG: ScoringConfig = {
@@ -128,7 +129,8 @@ export function extractFormantsFromAudio(
   samples: Float32Array,
   sampleRate: number = 16000,
   frameSize: number = 1024,
-  hopSize: number = 512
+  hopSize: number = 512,
+  useTracker: boolean = true
 ): FormantResult[] {
   const frames = frameAudio(samples, frameSize, hopSize);
   const window = hammingWindow(frameSize);
@@ -148,7 +150,9 @@ export function extractFormantsFromAudio(
     });
   }
 
-  return results;
+  // Apply temporal tracking (smoothing + continuity) to stabilize per-frame
+  // estimates before they feed GOP scoring.
+  return useTracker ? trackFormants(results) : results;
 }
 
 // Extract pitch contour from audio

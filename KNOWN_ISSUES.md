@@ -46,7 +46,7 @@ contour; see the scoring placeholder issue below.
 
 This unblocks a real pitch-accuracy computation. The schematic target is heuristic (fixed Hz per category) and not yet derived from real recordings or phrase-level prosody models.
 
-## Formant extraction is a textbook LPC pipeline, not a tracker (unchanged)
+## Formant extraction is a textbook LPC pipeline, not a tracker (mitigated)
 
 `findFormants` uses a Durand-Kerner polynomial root finder on LPC coefficients. It is:
 - numerically fragile at low polynomial degree,
@@ -56,6 +56,26 @@ This unblocks a real pitch-accuracy computation. The schematic target is heurist
 It feeds the `VowelChart` visualization but is **not** yet relied upon as the sole input to the
 GOP scoring path end-to-end. The scoring path currently uses formant targets from the phoneme
 catalog (`VOWEL_FORMANT_TARGETS`) more than per-frame detected formants for the verdict.
+
+**What changed:** a new `src/utils/formantTracker.ts` now post-processes the raw per-frame
+contour from `findFormants` with (1) formant continuity tracking — each detected formant is
+assigned to the nearest track (F1/F2/F3) from the previous frame, preventing index swaps — and
+(2) exponential smoothing (EMA) plus a moving-median outlier gate. `extractFormantsFromAudio`
+applies the tracker by default (`useTracker: true`); `analyzeDrill` therefore scores against a
+stabilized contour instead of noisy isolated frames. The LPC root-finder itself is unchanged, so
+the per-frame estimates remain textbook — but the GOP verdict is no longer dominated by
+frame-to-frame jitter. Speaker normalization is still absent.
+
+## Formant tracking added as a stabilization layer (new)
+
+`src/utils/formantTracker.ts` exports `trackFormants(raw: FormantResult[], options?)`:
+- `smoothing` (EMA factor, default 0.5),
+- `maxJumpHz` (continuity gate, default 400 Hz) — rejects candidates that jump absurdly from the
+  previous track and falls back to the previous value (this is what kills F1↔F2 swaps),
+- `outlierWindow` (median baseline window, default 5),
+- `minVoicedBandHz` (floor for "no formant", default 80 Hz).
+
+The tracker is covered by `src/utils/formantTracker.test.ts` (continuity, smoothing, empty input).
 
 ## `scoring.test.ts` no longer uses `as any` casts (resolved)
 
