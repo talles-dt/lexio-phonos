@@ -90,5 +90,5 @@ export interface AudioWorkletProcessorConfig {
 
 export interface AudioMessage {
   type: 'audio-data' | 'vad-result' | 'error' | 'stop';
-  payload: any;
+  payload: Record<string, unknown>;
 }

@@ -1,26 +1,217 @@
 @import "tailwindcss";
 
+/* Lexio Underground Design Tokens */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Colors */
+  --color-obsidian: #0D0D0F;
+  --color-surface: #141416;
+  --color-phosphor: #00FF88;
+  --color-amber: #FF9500;
+  --color-violet: #A855F7;
+  --color-ivory: #F5F0E8;
+  --color-zinc: #71717A;
+  --color-crimson: #DC2626;
+
+  /* Spacing (2px base) */
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 8px;
+  --space-4: 12px;
+  --space-6: 16px;
+  --space-8: 24px;
+  --space-12: 32px;
+  --space-16: 48px;
+
+  /* Radius */
+  --radius-card: 12px;
+  --radius-btn: 8px;
+  --radius-pill: 9999px;
+  --radius-sm: 6px;
+
+  /* Typography */
+  --font-display: "Syne", system-ui, sans-serif;
+  --font-serif: "Source Serif 4", Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@theme {
+  --font-sans: "Source Serif 4", ui-serif, Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-display: "Syne", system-ui, sans-serif;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-obsidian: #0D0D0F;
+  --color-surface: #141416;
+  --color-phosphor: #00FF88;
+  --color-amber: #FF9500;
+  --color-violet: #A855F7;
+  --color-ivory: #F5F0E8;
+  --color-zinc: #71717A;
+  --color-crimson: #DC2626;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-obsidian);
+  color: var(--color-ivory);
+  font-family: var(--font-serif);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Vowel chart */
+canvas.vowel-chart {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Drill card */
+.drill-card {
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+  background-color: var(--color-surface);
+  border: 1px solid #27272A;
+}
+
+.drill-card:hover {
+  border-color: var(--color-phosphor);
+  box-shadow: 0 0 0 1px var(--color-phosphor), 0 0 20px rgba(0, 255, 136, 0.1);
+}
+
+/* Recording button pulse */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+.record-active {
+  animation: pulse-ring 1.5s ease-in-out infinite;
+}
+
+/* Haptic feedback */
+@media (hover: none) {
+  .haptic-active {
+    touch-action: manipulation;
+  }
+}
+
+/* Lexio-specific utility classes */
+.lexio-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.lexio-mono {
+  font-family: var(--font-mono);
+}
+
+.lexio-ivory {
+  color: var(--color-ivory);
+}
+
+.lexio-zinc {
+  color: var(--color-zinc);
+}
+
+.lexio-phosphor {
+  color: var(--color-phosphor);
+}
+
+.lexio-amber {
+  color: var(--color-amber);
+}
+
+.lexio-violet {
+  color: var(--color-violet);
+}
+
+.lexio-crimson {
+  color: var(--color-crimson);
+}
+
+/* Button: phosphor CTA */
+.btn-phosphor {
+  background-color: var(--color-phosphor);
+  color: var(--color-obsidian);
+  border: none;
+  border-radius: var(--radius-btn);
+  padding: 12px 24px;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.btn-phosphor:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+}
+
+.btn-phosphor:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Button: secondary/outline */
+.btn-outline {
+  background-color: transparent;
+  color: var(--color-ivory);
+  border: 1px solid #27272A;
+  border-radius: var(--radius-btn);
+  padding: 12px 24px;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.btn-outline:hover {
+  border-color: var(--color-phosphor);
+  color: var(--color-phosphor);
+}
+
+/* Badge/pill */
+.badge-phosphor {
+  background-color: rgba(0, 255, 136, 0.1);
+  color: var(--color-phosphor);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: var(--radius-pill);
+  padding: 4px 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.badge-amber {
+  background-color: rgba(255, 149, 0, 0.1);
+  color: var(--color-amber);
+  border: 1px solid rgba(255, 149, 0, 0.3);
+  border-radius: var(--radius-pill);
+  padding: 4px 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.badge-violet {
+  background-color: rgba(168, 85, 247, 0.1);
+  color: var(--color-violet);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: var(--radius-pill);
+  padding: 4px 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Card */
+.lexio-card {
+  background-color: var(--color-surface);
+  border: 1px solid #27272A;
+  border-radius: var(--radius-card);
 }

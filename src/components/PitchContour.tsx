@@ -1,6 +1,7 @@
+"use client";
 // Pitch contour visualization
 
-import React, { useRef, useEffect, useMemo } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { PitchPoint } from '@/types/pronunciation';
 
 interface PitchContourProps {
@@ -54,7 +55,7 @@ export const PitchContour: React.FC<PitchContourProps> = ({
 
     // Draw grid
     if (showGrid) {
-      ctx.strokeStyle = '#e5e7eb';
+      ctx.strokeStyle = '#27272A';
       ctx.lineWidth = 1;
 
       // Vertical grid lines (time)
@@ -66,8 +67,8 @@ export const PitchContour: React.FC<PitchContourProps> = ({
         ctx.lineTo(x, padding.top + chartHeight);
         ctx.stroke();
 
-        ctx.fillStyle = '#9ca3af';
-        ctx.font = '10px sans-serif';
+        ctx.fillStyle = '#71717A';
+        ctx.font = '10px monospace';
         ctx.textAlign = 'center';
         ctx.fillText(`${t.toFixed(1)}s`, x, padding.top + chartHeight + 15);
       }
@@ -80,8 +81,8 @@ export const PitchContour: React.FC<PitchContourProps> = ({
         ctx.lineTo(padding.left + chartWidth, y);
         ctx.stroke();
 
-        ctx.fillStyle = '#9ca3af';
-        ctx.font = '10px sans-serif';
+        ctx.fillStyle = '#71717A';
+        ctx.font = '10px monospace';
         ctx.textAlign = 'right';
         ctx.fillText(`${freq}Hz`, padding.left - 10, y + 3);
       }
@@ -89,7 +90,7 @@ export const PitchContour: React.FC<PitchContourProps> = ({
 
     // Draw target contour (if provided)
     if (targetPoints && targetPoints.length > 0) {
-      ctx.strokeStyle = '#10b981';
+      ctx.strokeStyle = '#FF9500';
       ctx.lineWidth = 3;
       ctx.setLineDash([5, 5]);
       ctx.beginPath();
@@ -110,7 +111,7 @@ export const PitchContour: React.FC<PitchContourProps> = ({
       ctx.setLineDash([]);
 
       // Draw target points
-      ctx.fillStyle = '#10b981';
+      ctx.fillStyle = '#FF9500';
       for (const point of targetPoints) {
         const x = toX(point.timestamp);
         const y = toY(point.frequency);
@@ -122,7 +123,7 @@ export const PitchContour: React.FC<PitchContourProps> = ({
 
     // Draw user contour
     if (points && points.length > 0) {
-      ctx.strokeStyle = '#ef4444';
+      ctx.strokeStyle = '#DC2626';
       ctx.lineWidth = 2;
       ctx.beginPath();
       
@@ -141,13 +142,13 @@ export const PitchContour: React.FC<PitchContourProps> = ({
       ctx.stroke();
 
       // Draw user points
-      ctx.fillStyle = '#ef4444';
+      ctx.fillStyle = '#DC2626';
       for (const point of points) {
         const x = toX(point.timestamp);
         const y = toY(point.frequency);
         
         // Size based on confidence
-        const size = 2 + point.confidence * 3;
+        const size = 2 + (point.confidence ?? 0) * 3;
         ctx.beginPath();
         ctx.arc(x, y, size, 0, 2 * Math.PI);
         ctx.fill();
@@ -155,7 +156,7 @@ export const PitchContour: React.FC<PitchContourProps> = ({
     }
 
     // Draw axes labels
-    ctx.fillStyle = '#374151';
+    ctx.fillStyle = '#F5F0E8';
     ctx.font = 'bold 12px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('Time →', padding.left + chartWidth / 2, padding.top - 10);
@@ -167,22 +168,22 @@ export const PitchContour: React.FC<PitchContourProps> = ({
     ctx.restore();
 
     // Draw title
-    ctx.fillStyle = '#111827';
+    ctx.fillStyle = '#F5F0E8';
     ctx.font = 'bold 14px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('Pitch Contour', width / 2, 15);
   }, [points, targetPoints, width, height, duration, showGrid]);
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-4">
+    <div className="lexio-card rounded-lg shadow-lg p-4">
       <canvas
         ref={canvasRef}
         width={width}
         height={height}
         className="w-full h-auto"
       />
-      <div className="mt-2 text-xs text-gray-500 text-center">
-        <p>Red: Your pitch | Green: Target contour (dashed)</p>
+      <div className="mt-2 text-xs lexio-zinc text-center lexio-mono">
+        <p><span className="lexio-crimson">Red</span>: Your pitch | <span className="lexio-amber">Amber</span>: Target contour (dashed)</p>
       </div>
     </div>
   );

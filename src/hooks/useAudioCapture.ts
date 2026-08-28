@@ -1,3 +1,4 @@
+"use client";
 // Hook for audio capture and recording
 
 import { useState, useCallback, useEffect, useRef } from 'react';
@@ -17,7 +18,7 @@ export interface RecordingState {
 interface UseAudioCaptureOptions {
   targetSampleRate?: number;
   onRecordingStart?: () => void;
-  onRecordingStop?: (audioData: { blob: Blob; url: string; samples: Float32Array }) => void;
+  onRecordingStop?: (audioData: { blob: Blob; url: string; samples: Float32Array; sampleRate: number }) => void;
   onError?: (error: string) => void;
 }
 
@@ -121,7 +122,7 @@ export function useAudioCapture(options: UseAudioCaptureOptions = {}) {
       }));
 
       // Callback with audio data
-      onRecordingStop?.({ blob, url, samples });
+      onRecordingStop?.({ blob, url, samples, sampleRate: targetSampleRate });
 
       // Trigger haptic feedback if available
       if ('vibrate' in navigator) {

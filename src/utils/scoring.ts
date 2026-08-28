@@ -1,15 +1,23 @@
 // Pronunciation scoring engine
 
 import {
-  FormantResult,
-  PitchResult,
   GOPScore,
   PronunciationScore,
   ScoringConfig,
   PhonemeTarget,
   DrillAnalysis,
 } from '@/types/pronunciation';
-import { downsampleAudio, preEmphasis, lpc, findFormants, detectPitch, frameAudio, hammingWindow, applyWindow } from './audio';
+import { FormantResult, PitchResult } from '@/types/audio';
+import {
+  downsampleAudio,
+  preEmphasis,
+  lpc,
+  findFormants,
+  detectPitch,
+  frameAudio,
+  hammingWindow,
+  applyWindow,
+} from './audio';
 
 // Default scoring configuration
 const DEFAULT_SCORING_CONFIG: ScoringConfig = {
@@ -215,12 +223,27 @@ export function calculatePronunciationScore(
     suggestions.push(`${unacceptableCount} phoneme(s) need significant improvement`);
   }
 
+  // Build phoneme breakdown with the shape expected by PronunciationScore
+  const phonemeBreakdown: PronunciationScore['phonemeBreakdown'] = gopScores.map((s) => ({
+    phonemeId: s.phonemeId,
+    positionIndex: s.position,
+    startTimeMs: s.startTimeMs,
+    endTimeMs: s.endTimeMs,
+    gopScore: s.gopScore,
+    targetF1: s.targetF1,
+    targetF2: s.targetF2,
+    detectedF1: s.detectedF1,
+    detectedF2: s.detectedF2,
+    isAcceptable: s.isAcceptable,
+    confidence: s.confidence,
+  }));
+
   return {
     overall,
     pitchAccuracy: pitchAccuracy * 100,
     timing: timingAccuracy * 100,
     formantAccuracy: formantAccuracy * 100,
-    phonemeBreakdown: gopScores,
+    phonemeBreakdown,
     suggestions,
   };
 }
@@ -266,9 +289,16 @@ export function analyzeDrill(
     });
   }
 
-  // Calculate pitch accuracy (simple comparison with average)
-  const avgPitch = pitchContour.reduce((sum, p) => sum + p.frequency, 0) / pitchContour.length;
-  const pitchAccuracy = avgPitch > 0 ? 0.8 : 0.5; // Placeholder - would compare with target
+  // Pitch accuracy is a placeholder heuristic for the first iteration.
+  // detectPitch now applies a V/UV decision (salience + ZCR + frequency bounds),
+  // but there is no target pitch contour to compare against yet.
+  // The contour itself is shown in the UI via PitchContour; scoring uses only the
+  // fraction of frames that returned a pitch.
+  const voicedFrames = pitchContour.filter((p) => p.frequency > 0).length;
+  const pitchCoverage = pitchContour.length > 0 ? voicedFrames / pitchContour.length : 0;
+  // Heuristic: if most detected frames are voiced, treat pitch dimension as "present".
+  // This is not a real intonation assessment — it rewards having any pitch signal.
+  const pitchAccuracy = pitchCoverage > 0.5 ? 0.75 : 0.45;
 
   // Calculate timing accuracy
   const detectedDurationMs = (audioSamples.length / sampleRate) * 1000;

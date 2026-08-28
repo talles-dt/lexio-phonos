@@ -32,10 +32,9 @@ An interactive web application for improving English pronunciation through targe
 - Responsive design for all screen sizes
 
 ### 🔄 PWA Features
-- Offline support with service worker
-- Background sync for recordings
-- Installable on mobile devices
-- Fast loading with asset caching
+- Offline asset caching via service worker (`public/sw.js`)
+- Installable on desktop/mobile browsers (manifest + icons)
+- Fast loading with pre-cached static assets
 
 ## 🚀 Quick Start
 
@@ -43,7 +42,7 @@ An interactive web application for improving English pronunciation through targe
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/pronunciation-trainer.git
+git clone https://github.com/talles-dt/lexio-phonos.git
 cd pronunciation-trainer
 
 # Install dependencies
@@ -79,20 +78,17 @@ NEXT_PUBLIC_APP_URL="https://your-domain.com"
 ## 📦 Tech Stack
 
 - **Frontend**: [Next.js 16](https://nextjs.org/) (App Router), [React 19](https://react.dev/), [TypeScript](https://www.typescriptlang.org/)
-- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/), [shadcn/ui](https://ui.shadcn.com/)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
 - **Audio**: [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API), [AudioWorklet](https://developer.mozilla.org/en-US/docs/Web/API/AudioWorklet)
 - **Database**: [Prisma ORM](https://www.prisma.io/), [SQLite](https://www.sqlite.org/) (dev), [PostgreSQL](https://www.postgresql.org/) (prod)
-- **State Management**: [Zustand](https://github.com/pmndrs/zustand)
-- **3D Visualization**: [Three.js](https://threejs.org/), [React Three Fiber](https://github.com/pmndrs/react-three-fiber)
-- **Machine Learning**: [ONNX Runtime Web](https://onnxruntime.ai/), [TensorFlow.js](https://www.tensorflow.org/js)
 
 ## 🗂️ Project Structure
 
 ```
 pronunciation-trainer/
 ├── prisma/
-│   ├── schema.prisma      # Database schema (10 models)
-│   └── seed.ts             # Seed data (50+ phonemes, 20+ drills)
+│   ├── schema.prisma      # Database schema
+│   ├── seed.js            # Seed data (34 phonemes, 11 drills)
 ├── src/
 │   ├── app/
 │   │   ├── api/            # API routes (5 endpoints)
@@ -111,12 +107,14 @@ pronunciation-trainer/
 │   ├── types/              # TypeScript types
 │   │   ├── audio.ts        # Audio processing types
 │   │   └── pronunciation.ts # Pronunciation types
-│   └── utils/              # Utility functions
+│   ├── utils/              # Utility functions
 │       ├── audio.ts        # Audio processing (15+ functions)
 │       ├── audioWorklet.ts # AudioWorklet processor
+│       ├── pitchAnalysis.ts # Pitch contour comparison (DTW)
 │       └── scoring.ts      # GOP scoring engine
 ├── public/
 │   ├── manifest.json      # PWA manifest
+│   ├── sw.js              # Service worker
 │   └── icons/             # PWA icons
 ├── package.json
 ├── next.config.ts

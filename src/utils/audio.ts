@@ -218,13 +218,15 @@ export function autocorrelation(
   return result;
 }
 
-// Simple pitch detection using autocorrelation
+// Simple pitch detection using autocorrelation with V/UV decision
 export function detectPitch(
   samples: Float32Array,
   sampleRate: number = 16000
 ): PitchResult | null {
   const preEmphasized = preEmphasis(samples);
   const autocorr = autocorrelation(preEmphasized, Math.floor(sampleRate / 50));
+
+  if (autocorr.length < 2 || autocorr[0] <= 0) return null;
 
   let maxCorr = -Infinity;
   let maxLag = 0;
@@ -237,10 +239,21 @@ export function detectPitch(
     }
   }
 
-  if (maxCorr <= 0) return null;
+  // Salience threshold: peak must be a meaningful fraction of zero-lag energy
+  const salience = maxCorr / autocorr[0];
+  if (salience < 0.3) return null;
+
+  // V/UV decision via zero-crossing rate: voiced frames have lower ZCR
+  const zcr = calculateZeroCrossingRate(preEmphasized);
+  // Typical voiced speech ZCR < 0.15 at 16kHz; unvoiced fricatives exceed it
+  if (zcr > 0.15) return null;
 
   const frequency = sampleRate / maxLag;
-  const confidence = maxCorr / autocorr[0];
+
+  // Sanity bounds: human voice fundamental roughly 50–1000 Hz
+  if (frequency < 50 || frequency > 1000) return null;
+
+  const confidence = Math.min(1, salience);
 
   return {
     frequency,
@@ -544,5 +557,4 @@ export async function wavToPcm(blob: Blob): Promise<Float32Array> {
   throw new Error('No data chunk found in WAV file');
 }
 
-// Export default config
-export { DEFAULT_AUDIO_CONFIG, EnergyVAD, AudioRingBuffer };
+

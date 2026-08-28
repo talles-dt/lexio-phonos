@@ -80,14 +80,18 @@ registerProcessor('audio-capture-processor', AudioCaptureProcessor);
 // Register the worklet in the browser
 export async function registerAudioWorklet(audioContext: AudioContext): Promise<void> {
   try {
-    // Check if already registered
-    if (audioContext.audioWorklet?.nodeModules?.has('audio-capture-processor')) {
-      return;
-    }
-
-    // Register the processor
     const blob = new Blob([AUDIO_WORKLET_PROCESSOR_CODE], { type: 'application/javascript' });
     const url = URL.createObjectURL(blob);
+
+    if (audioContext.audioWorklet) {
+      try {
+        await audioContext.audioWorklet.addModule(url);
+        URL.revokeObjectURL(url);
+        return;
+      } catch {
+        // not registered yet, fallback to registering fresh
+      }
+    }
 
     await audioContext.audioWorklet?.addModule(url);
     URL.revokeObjectURL(url);
@@ -149,7 +153,7 @@ export class AudioCaptureManager {
     try {
       // Create audio context if needed
       if (!this.audioContext) {
-        this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        this.audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
         await registerAudioWorklet(this.audioContext);
       }
 

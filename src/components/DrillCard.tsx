@@ -1,16 +1,18 @@
+"use client";
+
 // Drill card component for pronunciation practice
 
 import React, { useState, useCallback } from 'react';
-import { Drill, PhonemeScore, getScoreColor, getMasteryLevel, MasteryLevel } from '@/types/pronunciation';
+import { Drill, DrillPhoneme, getScoreColor } from '@/types/pronunciation';
 import { useAudioCapture } from '@/hooks/useAudioCapture';
 import { VowelChart } from './VowelChart';
 import { PitchContour } from './PitchContour';
 import { FormantPoint, PitchPoint } from '@/types/pronunciation';
 import { analyzeDrill, extractFormantsFromAudio, extractPitchContour } from '@/utils/scoring';
-import { DrillAnalysis } from '@/types/pronunciation';
+import { DrillAnalysis, type PhonemeTarget } from '@/types/pronunciation';
 
 interface DrillCardProps {
-  drill: Drill & { phonemeSequence: any[] };
+  drill: Drill & { phonemeSequence: DrillPhoneme[] };
   onComplete?: (score: number, analysis: DrillAnalysis) => void;
   showVisualization?: boolean;
 }
@@ -48,13 +50,22 @@ export const DrillCard: React.FC<DrillCardProps> = ({
     },
     onRecordingStop: async (audioData) => {
       setIsRecording(false);
-      
-      // Analyze the recording
+
+      // Convert DrillPhoneme[] to PhonemeTarget[]
+      const phonemeTargets: PhonemeTarget[] = drill.phonemeSequence.map((p) => ({
+        phonemeId: p.phonemeId,
+        position: p.position,
+        startTimeMs: p.startTimeMs ?? 0,
+        endTimeMs: p.endTimeMs ?? 0,
+        f1Target: p.phoneme?.f1TargetHz ?? null,
+        f2Target: p.phoneme?.f2TargetHz ?? null,
+      }));
+
       const result = analyzeDrill(
         drill.id,
         drill.targetText,
         drill.targetIpa,
-        drill.phonemeSequence,
+        phonemeTargets,
         audioData.samples,
         audioData.sampleRate
       );
@@ -65,7 +76,7 @@ export const DrillCard: React.FC<DrillCardProps> = ({
 
       // Extract visualization data
       const formants = extractFormantsFromAudio(audioData.samples, audioData.sampleRate);
-      const formantPoints: FormantPoint[] = formants.map(f => ({
+      const formantPoints: FormantPoint[] = formants.map((f) => ({
         f1: f.f1,
         f2: f.f2,
         timestamp: f.timestamp,
@@ -76,7 +87,7 @@ export const DrillCard: React.FC<DrillCardProps> = ({
       setFormantPoints(formantPoints);
 
       const pitches = extractPitchContour(audioData.samples, audioData.sampleRate);
-      const pitchPoints: PitchPoint[] = pitches.map(p => ({
+      const pitchPoints: PitchPoint[] = pitches.map((p) => ({
         frequency: p.frequency,
         timestamp: p.timestamp,
         isTarget: false,
@@ -86,10 +97,10 @@ export const DrillCard: React.FC<DrillCardProps> = ({
 
       // Set target points from phoneme sequence
       const targetFormants: FormantPoint[] = drill.phonemeSequence
-        .filter(p => p.phoneme?.f1TargetHz && p.phoneme?.f2TargetHz)
-        .map(p => ({
-          f1: p.phoneme.f1TargetHz!,
-          f2: p.phoneme.f2TargetHz!,
+        .filter((p) => p.phoneme?.f1TargetHz && p.phoneme?.f2TargetHz)
+        .map((p) => ({
+          f1: p.phoneme!.f1TargetHz!,
+          f2: p.phoneme!.f2TargetHz!,
           timestamp: p.startTimeMs ? p.startTimeMs / 1000 : 0,
           phonemeId: p.phonemeId,
           isTarget: true,
@@ -133,63 +144,89 @@ export const DrillCard: React.FC<DrillCardProps> = ({
   // Get difficulty color
   const getDifficultyColor = (difficulty: number) => {
     switch (difficulty) {
-      case 1: return 'bg-green-100 text-green-800';
-      case 2: return 'bg-yellow-100 text-yellow-800';
-      case 3: return 'bg-orange-100 text-orange-800';
-      case 4: return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 1:
+        return 'badge-phosphor';
+      case 2:
+        return 'badge-amber';
+      case 3:
+        return 'badge-violet';
+      case 4:
+        return 'badge-violet';
+      default:
+        return 'badge-phosphor';
     }
   };
 
   // Get drill type label
   const getDrillTypeLabel = (drillType: string) => {
     switch (drillType) {
-      case 'MINIMAL_PAIR': return 'Minimal Pair';
-      case 'VOWEL_REDUCTION': return 'Vowel Reduction';
-      case 'INTONATION': return 'Intonation';
-      case 'CONSONANT_CLUSTER': return 'Consonant Cluster';
-      case 'WORD_STRESS': return 'Word Stress';
-      default: return drillType;
+      case 'MINIMAL_PAIR':
+        return 'Minimal Pair';
+      case 'VOWEL_REDUCTION':
+        return 'Vowel Reduction';
+      case 'INTONATION':
+        return 'Intonation';
+      case 'CONSONANT_CLUSTER':
+        return 'Consonant Cluster';
+      case 'WORD_STRESS':
+        return 'Word Stress';
+      default:
+        return drillType;
     }
   };
 
   return (
-    <div className={`bg-white rounded-xl shadow-md border ${isExpanded ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200'} transition-all duration-200`}>
+    <div
+      className={`drill-card rounded-xl shadow-md border ${
+        isExpanded ? 'border-[#00FF88] ring-2 ring-[#00FF88]/20' : 'border-[#27272A]'
+      } transition-all duration-200`}
+    >
       {/* Card header */}
-      <div 
-        className="p-4 cursor-pointer hover:bg-gray-50 transition-colors duration-150"
+      <div
+        className="p-4 cursor-pointer hover:bg-[#1A1A1D] transition-colors duration-150 rounded-t-xl"
         onClick={toggleExpand}
       >
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-lg font-semibold text-gray-900">{drill.title}</h3>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(drill.difficulty)}`}>
+              <h3 className="text-lg font-semibold text-[#F5F0E8] font-serif">{drill.title}</h3>
+              <span
+                className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(drill.difficulty)}`}
+              >
                 Level {drill.difficulty}
               </span>
-              <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              <span className="badge-phosphor">
                 {getDrillTypeLabel(drill.drillType)}
               </span>
             </div>
-            <p className="text-sm text-gray-600">{drill.targetIpa}</p>
+            <p className="text-sm lexio-mono lexio-zinc">{drill.targetIpa}</p>
             {drill.description && (
-              <p className="text-sm text-gray-500 mt-1">{drill.description}</p>
+              <p className="text-sm lexio-zinc mt-1 font-serif">{drill.description}</p>
             )}
           </div>
-          
+
           <div className="flex items-center gap-2">
             {score !== null && (
-              <span className={`px-3 py-1 rounded-full text-sm font-bold ${getScoreColor(score)} text-white`}>
+              <span
+                className={`px-3 py-1 rounded-full text-sm font-bold ${getScoreColor(score)} text-white`}
+              >
                 {score.toFixed(1)}%
               </span>
             )}
-            <svg 
-              className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-              fill="none" 
-              stroke="currentColor" 
+            <svg
+              className={`w-5 h-5 lexio-zinc transition-transform duration-200 ${
+                isExpanded ? 'rotate-180' : ''
+              }`}
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </div>
         </div>
@@ -197,7 +234,7 @@ export const DrillCard: React.FC<DrillCardProps> = ({
 
       {/* Expanded content */}
       {isExpanded && (
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-[#27272A]">
           {/* Recording controls */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
@@ -205,9 +242,9 @@ export const DrillCard: React.FC<DrillCardProps> = ({
                 onClick={handleRecord}
                 disabled={isRecording}
                 className={`px-6 py-3 rounded-lg font-medium transition-all duration-150 ${
-                  capturing 
-                    ? 'bg-red-500 text-white animate-pulse' 
-                    : 'bg-blue-500 hover:bg-blue-600 text-white'
+                  capturing
+                    ? 'bg-[#DC2626] text-white animate-pulse'
+                    : 'btn-phosphor'
                 }`}
               >
                 {capturing ? (
@@ -223,7 +260,7 @@ export const DrillCard: React.FC<DrillCardProps> = ({
               {audioUrl && (
                 <button
                   onClick={() => window.open(audioUrl, '_blank')}
-                  className="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors duration-150"
+                  className="px-4 py-3 bg-[#1A1A1D] hover:bg-[#27272A] text-[#F5F0E8] rounded-lg font-medium transition-colors duration-150 lexio-mono"
                 >
                   Listen
                 </button>
@@ -232,7 +269,7 @@ export const DrillCard: React.FC<DrillCardProps> = ({
               {audioUrl && (
                 <button
                   onClick={handleClear}
-                  className="px-4 py-3 bg-gray-100 hover:bg-red-100 text-gray-600 rounded-lg font-medium transition-colors duration-150"
+                  className="px-4 py-3 bg-[#1A1A1D] hover:bg-[#DC2626]/20 text-[#F5F0E8] rounded-lg font-medium transition-colors duration-150 lexio-mono"
                 >
                   Clear
                 </button>
@@ -242,7 +279,7 @@ export const DrillCard: React.FC<DrillCardProps> = ({
             {audioUrl && (
               <div className="flex items-center gap-2">
                 <audio src={audioUrl} controls className="w-48" />
-                <span className="text-sm text-gray-500">
+                <span className="text-sm lexio-zinc lexio-mono">
                   {duration.toFixed(1)}s
                 </span>
               </div>
@@ -253,7 +290,9 @@ export const DrillCard: React.FC<DrillCardProps> = ({
           {showVisualization && audioUrl && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               <div>
-                <h4 className="text-sm font-semibold text-gray-700 mb-2">Vowel Formant Chart</h4>
+                <h4 className="text-sm font-semibold text-[#F5F0E8] mb-2 lexio-mono">
+                  Vowel Formant Chart
+                </h4>
                 <VowelChart
                   points={formantPoints}
                   targetPoints={targetFormantPoints}
@@ -262,7 +301,9 @@ export const DrillCard: React.FC<DrillCardProps> = ({
                 />
               </div>
               <div>
-                <h4 className="text-sm font-semibold text-gray-700 mb-2">Pitch Contour</h4>
+                <h4 className="text-sm font-semibold text-[#F5F0E8] mb-2 lexio-mono">
+                  Pitch Contour
+                </h4>
                 <PitchContour
                   points={pitchPoints}
                   targetPoints={targetPitchPoints}
@@ -276,31 +317,41 @@ export const DrillCard: React.FC<DrillCardProps> = ({
 
           {/* Score breakdown */}
           {analysis && (
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
-              <h4 className="text-sm font-semibold text-gray-700 mb-3">Score Breakdown</h4>
-              
+            <div className="bg-[#1A1A1D] rounded-lg p-4 mb-6">
+              <h4 className="text-sm font-semibold text-[#F5F0E8] mb-3 lexio-mono">
+                Score Breakdown
+              </h4>
+
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                 <div className="text-center">
-                  <div className="text-xs text-gray-500 mb-1">Overall</div>
-                  <div className={`text-2xl font-bold ${getScoreColor(analysis.scores.overall)}`}>
+                  <div className="text-xs lexio-zinc mb-1 lexio-mono">Overall</div>
+                  <div
+                    className={`text-2xl font-bold ${getScoreColor(analysis.scores.overall)}`}
+                  >
                     {analysis.scores.overall.toFixed(1)}%
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-xs text-gray-500 mb-1">Pitch</div>
-                  <div className={`text-2xl font-bold ${getScoreColor(analysis.scores.pitchAccuracy)}`}>
+                  <div className="text-xs lexio-zinc mb-1 lexio-mono">Pitch</div>
+                  <div
+                    className={`text-2xl font-bold ${getScoreColor(analysis.scores.pitchAccuracy)}`}
+                  >
                     {analysis.scores.pitchAccuracy.toFixed(1)}%
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-xs text-gray-500 mb-1">Timing</div>
-                  <div className={`text-2xl font-bold ${getScoreColor(analysis.scores.timing)}`}>
+                  <div className="text-xs lexio-zinc mb-1 lexio-mono">Timing</div>
+                  <div
+                    className={`text-2xl font-bold ${getScoreColor(analysis.scores.timing)}`}
+                  >
                     {analysis.scores.timing.toFixed(1)}%
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-xs text-gray-500 mb-1">Formant</div>
-                  <div className={`text-2xl font-bold ${getScoreColor(analysis.scores.formantAccuracy)}`}>
+                  <div className="text-xs lexio-zinc mb-1 lexio-mono">Formant</div>
+                  <div
+                    className={`text-2xl font-bold ${getScoreColor(analysis.scores.formantAccuracy)}`}
+                  >
                     {analysis.scores.formantAccuracy.toFixed(1)}%
                   </div>
                 </div>
@@ -309,32 +360,36 @@ export const DrillCard: React.FC<DrillCardProps> = ({
               {/* Phoneme breakdown */}
               {analysis.scores.phonemeBreakdown.length > 0 && (
                 <div className="mb-4">
-                  <h5 className="text-xs font-semibold text-gray-600 mb-2">Phoneme Scores</h5>
+                  <h5 className="text-xs font-semibold text-[#A1A1AA] mb-2 lexio-mono">
+                    Phoneme Scores
+                  </h5>
                   <div className="space-y-2">
                     {analysis.scores.phonemeBreakdown.map((phone, index) => (
-                      <div 
+                      <div
                         key={index}
-                        className="flex items-center justify-between p-2 bg-white rounded border"
+                        className="flex items-center justify-between p-2 bg-[#141416] rounded border border-[#27272A]"
                       >
                         <div className="flex items-center gap-2">
-                          <span className="font-mono text-sm">{phone.phonemeId}</span>
+                          <span className="font-mono text-sm text-[#F5F0E8]">{phone.phonemeId}</span>
                           {phone.targetF1 && phone.targetF2 && (
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs lexio-zinc">
                               Target: F1={phone.targetF1}Hz, F2={phone.targetF2}Hz
                             </span>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
                           {phone.detectedF1 && phone.detectedF2 && (
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs lexio-zinc">
                               Detected: F1={phone.detectedF1.toFixed(0)}Hz, F2={phone.detectedF2.toFixed(0)}Hz
                             </span>
                           )}
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${
-                            phone.isAcceptable 
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}>
+                          <span
+                            className={`px-2 py-1 rounded text-xs font-medium ${
+                              phone.isAcceptable
+                                ? 'badge-phosphor'
+                                : 'badge-violet'
+                            }`}
+                          >
                             {phone.gopScore.toFixed(2)}
                           </span>
                         </div>
@@ -346,9 +401,11 @@ export const DrillCard: React.FC<DrillCardProps> = ({
 
               {/* Suggestions */}
               {suggestions.length > 0 && (
-                <div className="bg-blue-50 rounded-lg p-3">
-                  <h5 className="text-xs font-semibold text-blue-700 mb-2">Suggestions</h5>
-                  <ul className="list-disc list-inside text-sm text-blue-800 space-y-1">
+                <div className="bg-[#00FF88]/5 rounded-lg p-3 border border-[#00FF88]/20">
+                  <h5 className="text-xs font-semibold text-[#00FF88] mb-2 lexio-mono">
+                    Suggestions
+                  </h5>
+                  <ul className="list-disc list-inside text-sm text-[#F5F0E8] space-y-1 font-serif">
                     {suggestions.map((suggestion, index) => (
                       <li key={index}>{suggestion}</li>
                     ))}
@@ -359,9 +416,13 @@ export const DrillCard: React.FC<DrillCardProps> = ({
           )}
 
           {/* Drill instructions */}
-          <div className="bg-yellow-50 rounded-lg p-4">
-            <h4 className="text-sm font-semibold text-yellow-700 mb-2">Practice Tips</h4>
-            <p className="text-sm text-yellow-800">{drill.description || 'Practice this drill to improve your pronunciation.'}</p>
+          <div className="bg-[#FF9500]/5 rounded-lg p-4 border border-[#FF9500]/20">
+            <h4 className="text-sm font-semibold text-[#FF9500] mb-2 lexio-mono">
+              Practice Tips
+            </h4>
+            <p className="text-sm text-[#F5F0E8] font-serif">
+              {drill.description || 'Practice this drill to improve your pronunciation.'}
+            </p>
           </div>
         </div>
       )}

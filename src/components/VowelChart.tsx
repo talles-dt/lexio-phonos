@@ -1,7 +1,8 @@
+"use client";
 // Vowel chart visualization for formant analysis
 
 import React, { useRef, useEffect, useMemo } from 'react';
-import { FormantPoint, VowelChartConfig } from '@/types/pronunciation';
+import { FormantPoint, VowelChartConfig, VowelCategoryConfig } from '@/types/pronunciation';
 
 interface VowelChartProps {
   points: FormantPoint[];
@@ -18,43 +19,43 @@ const DEFAULT_CONFIG: VowelChartConfig = {
   vowelCategories: {
     high_front: {
       label: 'High Front',
-      color: 'text-red-500',
+      color: '#DC2626', // crimson
       f1Range: [200, 400],
       f2Range: [1800, 2500],
     },
     mid_front: {
       label: 'Mid Front',
-      color: 'text-orange-500',
+      color: '#FF9500', // amber
       f1Range: [400, 600],
       f2Range: [1500, 2000],
     },
     low_front: {
       label: 'Low Front',
-      color: 'text-yellow-500',
+      color: '#FF9500', // amber
       f1Range: [600, 800],
       f2Range: [1500, 2000],
     },
     high_back: {
       label: 'High Back',
-      color: 'text-purple-500',
+      color: '#A855F7', // violet
       f1Range: [200, 400],
       f2Range: [500, 1200],
     },
     mid_back: {
       label: 'Mid Back',
-      color: 'text-indigo-500',
+      color: '#A855F7', // violet
       f1Range: [400, 600],
       f2Range: [800, 1500],
     },
     low_back: {
       label: 'Low Back',
-      color: 'text-pink-500',
+      color: '#A855F7', // violet
       f1Range: [600, 800],
       f2Range: [800, 1500],
     },
     central: {
       label: 'Central',
-      color: 'text-green-500',
+      color: '#00FF88', // phosphor
       f1Range: [400, 600],
       f2Range: [1000, 1800],
     },
@@ -122,7 +123,7 @@ export const VowelChart: React.FC<VowelChartProps> = ({
 
     // Draw grid
     if (showGrid) {
-      ctx.strokeStyle = '#e5e7eb';
+      ctx.strokeStyle = '#27272A';
       ctx.lineWidth = 1;
 
       // Vertical grid lines (F2)
@@ -134,8 +135,8 @@ export const VowelChart: React.FC<VowelChartProps> = ({
         ctx.stroke();
 
         if (showLabels) {
-          ctx.fillStyle = '#9ca3af';
-          ctx.font = '10px sans-serif';
+          ctx.fillStyle = '#71717A';
+          ctx.font = '10px monospace';
           ctx.textAlign = 'center';
           ctx.fillText(`${f2}`, x, padding + chartHeight + 15);
         }
@@ -150,8 +151,8 @@ export const VowelChart: React.FC<VowelChartProps> = ({
         ctx.stroke();
 
         if (showLabels) {
-          ctx.fillStyle = '#9ca3af';
-          ctx.font = '10px sans-serif';
+          ctx.fillStyle = '#71717A';
+          ctx.font = '10px monospace';
           ctx.textAlign = 'right';
           ctx.fillText(`${f1}`, padding - 10, y + 3);
         }
@@ -160,23 +161,24 @@ export const VowelChart: React.FC<VowelChartProps> = ({
 
     // Draw vowel category regions
     for (const [category, categoryConfig] of Object.entries(config.vowelCategories)) {
-      const x1 = toX(categoryConfig.f2Range[0]);
-      const x2 = toX(categoryConfig.f2Range[1]);
-      const y1 = toY(categoryConfig.f1Range[1]); // Inverted
-      const y2 = toY(categoryConfig.f1Range[0]);
+      const cfg = categoryConfig as VowelCategoryConfig;
+      const x1 = toX(cfg.f2Range[0]);
+      const x2 = toX(cfg.f2Range[1]);
+      const y1 = toY(cfg.f1Range[1]); // Inverted
+      const y2 = toY(cfg.f1Range[0]);
 
-      ctx.fillStyle = categoryConfig.color.replace('text', 'bg') + '20';
+      ctx.fillStyle = cfg.color + '20';
       ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
 
-      ctx.strokeStyle = categoryConfig.color.replace('text', 'border') + '40';
+      ctx.strokeStyle = cfg.color + '40';
       ctx.lineWidth = 1;
       ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
 
       if (showLabels) {
-        ctx.fillStyle = categoryConfig.color.replace('text', '') + '80';
+        ctx.fillStyle = cfg.color + 'CC';
         ctx.font = 'bold 11px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(categoryConfig.label, (x1 + x2) / 2, (y1 + y2) / 2);
+        ctx.fillText(cfg.label, (x1 + x2) / 2, (y1 + y2) / 2);
       }
     }
 
@@ -186,19 +188,19 @@ export const VowelChart: React.FC<VowelChartProps> = ({
       const y = toY(target.f1);
 
       // Draw target marker
-      ctx.fillStyle = '#06b6d4';
+      ctx.fillStyle = '#00FF88';
       ctx.beginPath();
       ctx.arc(x, y, 6, 0, 2 * Math.PI);
       ctx.fill();
 
-      ctx.strokeStyle = '#ffffff';
+      ctx.strokeStyle = '#0D0D0F';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(x, y, 6, 0, 2 * Math.PI);
       ctx.stroke();
 
       // Draw label
-      ctx.fillStyle = '#06b6d4';
+      ctx.fillStyle = '#00FF88';
       ctx.font = 'bold 12px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(target.label, x, y - 15);
@@ -206,7 +208,7 @@ export const VowelChart: React.FC<VowelChartProps> = ({
 
     // Draw target points (if provided)
     if (targetPoints && targetPoints.length > 0) {
-      ctx.fillStyle = '#10b981';
+      ctx.fillStyle = '#FF9500';
       for (const point of targetPoints) {
         const x = toX(point.f2);
         const y = toY(point.f1);
@@ -215,7 +217,7 @@ export const VowelChart: React.FC<VowelChartProps> = ({
         ctx.arc(x, y, 8, 0, 2 * Math.PI);
         ctx.fill();
 
-        ctx.strokeStyle = '#ffffff';
+        ctx.strokeStyle = '#0D0D0F';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(x, y, 8, 0, 2 * Math.PI);
@@ -223,7 +225,7 @@ export const VowelChart: React.FC<VowelChartProps> = ({
 
         // Draw label if phoneme is known
         if (point.phonemeId && VOWEL_TARGETS[point.phonemeId]) {
-          ctx.fillStyle = '#10b981';
+          ctx.fillStyle = '#FF9500';
           ctx.font = 'bold 11px sans-serif';
           ctx.textAlign = 'center';
           ctx.fillText(VOWEL_TARGETS[point.phonemeId].label, x, y - 12);
@@ -233,19 +235,19 @@ export const VowelChart: React.FC<VowelChartProps> = ({
 
     // Draw user points
     if (points && points.length > 0) {
-      ctx.fillStyle = '#ef4444';
+      ctx.fillStyle = '#DC2626';
       for (const point of points) {
         const x = toX(point.f2);
         const y = toY(point.f1);
 
         // Size based on confidence
-        const size = 4 + point.confidence * 6;
+        const size = 4 + (point.confidence ?? 0) * 6;
 
         ctx.beginPath();
         ctx.arc(x, y, size, 0, 2 * Math.PI);
         ctx.fill();
 
-        ctx.strokeStyle = '#ffffff';
+        ctx.strokeStyle = '#0D0D0F';
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.arc(x, y, size, 0, 2 * Math.PI);
@@ -253,7 +255,7 @@ export const VowelChart: React.FC<VowelChartProps> = ({
 
         // Draw label if phoneme is known
         if (point.phonemeId && VOWEL_TARGETS[point.phonemeId]) {
-          ctx.fillStyle = '#ef4444';
+          ctx.fillStyle = '#DC2626';
           ctx.font = 'bold 10px sans-serif';
           ctx.textAlign = 'center';
           ctx.fillText(VOWEL_TARGETS[point.phonemeId].label, x, y + 15);
@@ -262,7 +264,7 @@ export const VowelChart: React.FC<VowelChartProps> = ({
 
       // Draw trajectory line
       if (points.length > 1) {
-        ctx.strokeStyle = '#ef4444';
+        ctx.strokeStyle = '#DC2626';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(toX(points[0].f2), toY(points[0].f1));
@@ -274,7 +276,7 @@ export const VowelChart: React.FC<VowelChartProps> = ({
     }
 
     // Draw axes labels
-    ctx.fillStyle = '#374151';
+    ctx.fillStyle = '#F5F0E8';
     ctx.font = 'bold 12px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('F2 (Hz) →', padding + chartWidth / 2, padding - 20);
@@ -286,22 +288,22 @@ export const VowelChart: React.FC<VowelChartProps> = ({
     ctx.restore();
 
     // Draw title
-    ctx.fillStyle = '#111827';
+    ctx.fillStyle = '#F5F0E8';
     ctx.font = 'bold 14px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('Vowel Formant Chart', width / 2, 20);
   }, [points, targetPoints, width, height, showGrid, showLabels, config]);
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-4">
+    <div className="lexio-card rounded-lg shadow-lg p-4">
       <canvas
         ref={canvasRef}
         width={width}
         height={height}
         className="w-full h-auto"
       />
-      <div className="mt-2 text-xs text-gray-500 text-center">
-        <p>Red: Your pronunciation | Blue: Target vowels | Green: Target for this drill</p>
+      <div className="mt-2 text-xs lexio-zinc text-center lexio-mono">
+        <p><span className="lexio-crimson">Red</span>: Your pronunciation | <span className="lexio-phosphor">Green</span>: Target vowels | <span className="lexio-amber">Amber</span>: Target for this drill</p>
       </div>
     </div>
   );
