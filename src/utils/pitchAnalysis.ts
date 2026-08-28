@@ -3,7 +3,7 @@
 // and returns a similarity score in 0-1 range.
 
 import { PitchResult } from '@/types/audio';
-import { simpleDTW } from './scoring';
+import { simpleDTW } from './dtw';
 
 // Default config for pitch contour comparison
 const DEFAULT_PITCH_CONFIG = {

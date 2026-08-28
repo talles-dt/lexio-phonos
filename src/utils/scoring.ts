@@ -18,6 +18,7 @@ import {
   hammingWindow,
   applyWindow,
 } from './audio';
+import { comparePitchContour, generateSyntheticPitchContour } from './pitchAnalysis';
 
 // Default scoring configuration
 const DEFAULT_SCORING_CONFIG: ScoringConfig = {
@@ -289,16 +290,20 @@ export function analyzeDrill(
     });
   }
 
-  // Pitch accuracy is a placeholder heuristic for the first iteration.
-  // detectPitch now applies a V/UV decision (salience + ZCR + frequency bounds),
-  // but there is no target pitch contour to compare against yet.
-  // The contour itself is shown in the UI via PitchContour; scoring uses only the
-  // fraction of frames that returned a pitch.
-  const voicedFrames = pitchContour.filter((p) => p.frequency > 0).length;
-  const pitchCoverage = pitchContour.length > 0 ? voicedFrames / pitchContour.length : 0;
-  // Heuristic: if most detected frames are voiced, treat pitch dimension as "present".
-  // This is not a real intonation assessment — it rewards having any pitch signal.
-  const pitchAccuracy = pitchCoverage > 0.5 ? 0.75 : 0.45;
+  // Pitch accuracy: compare the detected pitch contour against a synthetic
+  // target generated from the phoneme sequence. The synthetic contour uses
+  // per-category pitch targets (declarative knowledge, not learned from data).
+  // comparePitchContour returns similarity in [0, 1] via DTW alignment; when
+  // there is no usable target or coverage is too low it returns 0.
+  const targetContour = generateSyntheticPitchContour(
+    phonemeSequence.map((p) => ({
+      phonemeId: p.phonemeId,
+      startTimeMs: p.startTimeMs,
+      endTimeMs: p.endTimeMs,
+    }))
+  );
+  const pitchComparison = comparePitchContour(pitchContour, targetContour);
+  const pitchAccuracy = pitchComparison.similarity;
 
   // Calculate timing accuracy
   const detectedDurationMs = (audioSamples.length / sampleRate) * 1000;
@@ -334,59 +339,8 @@ export function analyzeDrill(
   };
 }
 
-// Simple DTW (Dynamic Time Warping) for alignment
-export function simpleDTW(
-  sequenceA: number[],
-  sequenceB: number[]
-): { distance: number; path: [number, number][] } {
-  const m = sequenceA.length;
-  const n = sequenceB.length;
-
-  // Initialize DTW matrix
-  const dtw = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(Infinity));
-  dtw[0][0] = 0;
-
-  // Fill first row and column
-  for (let i = 1; i <= m; i++) {
-    dtw[i][0] = dtw[i - 1][0] + Math.abs(sequenceA[i - 1] - sequenceB[0]);
-  }
-  for (let j = 1; j <= n; j++) {
-    dtw[0][j] = dtw[0][j - 1] + Math.abs(sequenceA[0] - sequenceB[j - 1]);
-  }
-
-  // Fill the rest
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      const cost = Math.abs(sequenceA[i - 1] - sequenceB[j - 1]);
-      dtw[i][j] = cost + Math.min(dtw[i - 1][j], dtw[i][j - 1], dtw[i - 1][j - 1]);
-    }
-  }
-
-  // Backtrace to find path
-  const path: [number, number][] = [];
-  let i = m;
-  let j = n;
-  path.push([i - 1, j - 1]);
-
-  while (i > 1 || j > 1) {
-    if (i > 1 && j > 1 && dtw[i][j] === dtw[i - 1][j - 1] + Math.abs(sequenceA[i - 1] - sequenceB[j - 1])) {
-      i--;
-      j--;
-    } else if (i > 1 && dtw[i][j] === dtw[i - 1][j] + Math.abs(sequenceA[i - 1] - sequenceB[j - 1])) {
-      i--;
-    } else if (j > 1) {
-      j--;
-    }
-    path.push([i - 1, j - 1]);
-  }
-
-  path.reverse();
-
-  return {
-    distance: dtw[m][n],
-    path,
-  };
-}
+// Simple DTW moved to ./dtw to avoid a circular dependency with pitchAnalysis.ts.
+export { simpleDTW } from './dtw';
 
 // Utility functions
 export function getPhonemeCategory(phonemeId: string): string {
