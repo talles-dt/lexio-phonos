@@ -1,0 +1,141 @@
+// Production schema (PostgreSQL).
+// Mirror of prisma/schema.prisma but with the postgresql provider so we can
+// validate the model against a real Postgres instance (Docker) before deploy.
+// Keep this in sync with schema.prisma — the only difference is the datasource
+// provider and url env var.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Target phoneme dictionary
+model Phoneme {
+  id           String    @id
+  ipaSymbol   String    @unique
+  category     String    // 'vowel_tense', 'fricative_dental', etc.
+  f1TargetHz   Float?
+  f2TargetHz   Float?
+  description  String?
+  createdAt    DateTime  @default(now())
+
+  // Relations
+  drills          DrillPhoneme[]
+  phonemeScores   PhonemeScore[]
+  userMastery     UserPhonemeMastery[]
+}
+
+// Exercises and Drill Content
+model Drill {
+  id              String      @id @default(uuid())
+  title           String
+  drillType       String      // MINIMAL_PAIR, VOWEL_REDUCTION, INTONATION, CONSONANT_CLUSTER, WORD_STRESS
+  targetText      String
+  targetIpa       String
+  description     String?
+  difficulty      Int         @default(1)
+  referenceAudioUrl String?
+  referenceF0Contour String?    // JSON string of [timestamp_ms, f0_hz]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Relations
+  phonemeSequence DrillPhoneme[]
+  userRecordings  UserRecording[]
+}
+
+// Many-to-many: Drills have phonemes in sequence
+model DrillPhoneme {
+  id          String   @id @default(uuid())
+  drillId     String
+  phonemeId   String
+  position    Int
+  startTimeMs Int?
+  endTimeMs   Int?
+  drill       Drill    @relation(fields: [drillId], references: [id], onDelete: Cascade)
+  phoneme     Phoneme  @relation(fields: [phonemeId], references: [id])
+
+  @@unique([drillId, position])
+}
+
+// User Recording Sessions & Assessments
+model UserRecording {
+  id              String     @id @default(uuid())
+  userId          String?
+  drillId         String
+  audioBlobUrl    String
+  durationMs      Int
+  overallScore    Float
+  pitchAccuracyScore Float?
+  timingScore     Float?
+  formantScore    Float?
+  createdAt       DateTime   @default(now())
+
+  // Relations
+  drill           Drill      @relation(fields: [drillId], references: [id])
+  phonemeScores   PhonemeScore[]
+  user            User?      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([drillId])
+  @@index([createdAt])
+}
+
+// Detailed Phoneme-by-Phoneme Scoring Breakdown
+model PhonemeScore {
+  id              String   @id @default(uuid())
+  recordingId     String
+  phonemeId       String
+  positionIndex   Int
+  startTimeMs     Int
+  endTimeMs       Int
+  gopScore        Float   // Goodness of Pronunciation score (0-1)
+  detectedF1      Float?
+  detectedF2      Float?
+  isAcceptable    Boolean
+  confidence      Float?
+  createdAt       DateTime @default(now())
+
+  // Relations
+  recording       UserRecording @relation(fields: [recordingId], references: [id], onDelete: Cascade)
+  phoneme         Phoneme        @relation(fields: [phonemeId], references: [id])
+
+  @@index([recordingId])
+  @@index([phonemeId])
+  @@unique([recordingId, phonemeId, positionIndex])
+}
+
+// User Phoneme Mastery Aggregates
+model UserPhonemeMastery {
+  userId        String
+  phonemeId     String
+  attemptsCount Int    @default(0)
+  averageGopScore Float @default(0.0)
+  masteryLevel  Float @default(0.0) // 0.0 to 1.0 scale
+  lastPracticedAt DateTime @default(now())
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phoneme Phoneme @relation(fields: [phonemeId], references: [id])
+
+  @@id([userId, phonemeId])
+  @@index([userId])
+  @@index([phonemeId])
+}
+
+// User model for authentication (simplified for local dev)
+model User {
+  id            String    @id @default(uuid())
+  email         String?   @unique
+  name          String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  userRecordings UserRecording[]
+  userMastery    UserPhonemeMastery[]
+}

@@ -38,12 +38,12 @@ An interactive web application for improving English pronunciation through targe
 
 ## 🚀 Quick Start
 
-### Local Development
+### Local Development (SQLite — default)
 
 ```bash
 # Clone the repository
 git clone https://github.com/talles-dt/lexio-phonos.git
-cd pronunciation-trainer
+cd lexio-phonos
 
 # Install dependencies
 npm install
@@ -60,6 +60,22 @@ npm run dev
 # http://localhost:3000
 ```
 
+### Production (PostgreSQL)
+
+The schema is provider-agnostic. For production, set `DATABASE_URL` to your Postgres
+instance and use the Postgres-specific schema (`prisma/schema.postgres.prisma`):
+
+```bash
+# 1. Set DATABASE_URL in .env (see .env.example)
+# 2. Generate the Postgres client + push the schema
+npm run db:generate:pg
+npm run db:push:pg
+npm run db:seed          # seeds 34 phonemes + 11 drills against DATABASE_URL
+```
+
+> The `prisma/seed.js` script is provider-agnostic — it works against either
+> SQLite or PostgreSQL depending on `DATABASE_URL`.
+
 ### Environment Variables
 
 Create a `.env` file in the root directory:
@@ -69,9 +85,9 @@ DATABASE_URL="file:./dev.db"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 ```
 
-For production with Supabase:
+For production with Supabase or any PostgreSQL instance:
 ```env
-DATABASE_URL="postgresql://user:password@localhost:5432/pronunciation-trainer"
+DATABASE_URL="postgresql://user:password@host:5432/lexio"
 NEXT_PUBLIC_APP_URL="https://your-domain.com"
 ```
 

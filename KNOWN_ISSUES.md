@@ -111,11 +111,18 @@ dedicated `tsconfig.e2e.json`. The spec is a smoke test (page title, drill list 
 successful `/api/analyze` round-trip). It is not yet executed against a running dev server, and
 there are no assertions on real audio capture.
 
-## Database provider is SQLite for local development only (unchanged)
+## Database provider is SQLite for local development only (resolved for production)
 
-The Prisma schema and seed are written to be provider-agnostic, but they have been validated only
-with the SQLite provider (`prisma/dev.db`) so far. Swapping to PostgreSQL for production has not
-been tested end-to-end.
+The Prisma schema and seed are written to be provider-agnostic, but they had only been validated
+with the SQLite provider (`prisma/dev.db`).
+
+**What changed:** a `prisma/schema.postgres.prisma` mirror (provider `postgresql`) was added, plus
+`db:generate:pg` / `db:push:pg` npm scripts and a `.env.example`. The Postgres path was validated
+end-to-end against a real PostgreSQL 16 instance (Docker): `prisma db push` created all tables,
+`npm run db:seed` inserted 34 phonemes / 11 drills / 42 drill_phoneme rows, and the production app
+(`next start` with `DATABASE_URL` pointing at Postgres) served `/api/drills`, `/api/phonemes`, and
+`/api/mastery` correctly. The `prisma/seed.js` script is provider-agnostic and works against either
+SQLite or PostgreSQL via `DATABASE_URL`.
 
 ## No authentication or user accounts (unchanged)
 
