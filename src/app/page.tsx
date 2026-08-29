@@ -5,6 +5,7 @@ import PhonemeMasteryChart from '@/components/PhonemeMasteryChart';
 import { useEffect, useState } from 'react';
 import type { Drill } from '@/types/pronunciation';
 import { registerSW } from '@/utils/registerSW';
+import { getLocalUserId } from '@/lib/localUser';
 
 async function fetchDrills(type?: string): Promise<Drill[]> {
   const params = new URLSearchParams();
@@ -15,7 +16,7 @@ async function fetchDrills(type?: string): Promise<Drill[]> {
 }
 
 async function fetchMastery(): Promise<import('@/types/pronunciation').UserPhonemeMastery[]> {
-  const res = await fetch('/api/mastery?userId=anonymous');
+  const res = await fetch(`/api/mastery?userId=${encodeURIComponent(getLocalUserId())}`);
   if (!res.ok) return [];
   return (await res.json()) as import('@/types/pronunciation').UserPhonemeMastery[];
 }

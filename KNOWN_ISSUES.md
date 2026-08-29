@@ -124,10 +124,21 @@ end-to-end against a real PostgreSQL 16 instance (Docker): `prisma db push` crea
 `/api/mastery` correctly. The `prisma/seed.js` script is provider-agnostic and works against either
 SQLite or PostgreSQL via `DATABASE_URL`.
 
-## No authentication or user accounts (unchanged)
+## No authentication — local-only progress by design (resolved)
 
-The app uses a hardcoded `anonymous` userId for mastery tracking. Adding real authentication
-(e.g. Supabase Auth) and per-user isolation is out of scope for the first iteration.
+There is **no authentication and no user accounts**, by explicit product decision. Instead,
+per-browser progress is tracked under a stable anonymous ID persisted in a cookie
+(`lexio_anon_id`, 1-year expiry) via `src/lib/localUser.ts`. The ID is generated once on first
+visit and reused thereafter; it is what gets sent as `userId` to the scoring/recording APIs
+(mapping to the `User` table row and the `UserPhonemeMastery` aggregate).
+
+`src/app/page.tsx` now reads mastery with `?userId=<cookie-id>` instead of the hardcoded
+`anonymous`. The API routes still fall back to `anonymous` if no `userId` is supplied, so the
+contract is backward compatible.
+
+This means progress is **local to the browser** (cleared if cookies are wiped / on a different
+device). Adding real authentication (e.g. Supabase Auth) and cross-device sync is intentionally
+out of scope.
 
 ## PWA: service worker registered, icons corrected (resolved icons, partial SW)
 
