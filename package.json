@@ -14,7 +14,9 @@
     "db:studio": "prisma studio",
     "db:generate:pg": "prisma generate --schema=prisma/schema.postgres.prisma",
     "db:push:pg": "prisma db push --schema=prisma/schema.postgres.prisma",
-    "db:seed:pg": "tsx prisma/seed.js"
+    "db:seed:pg": "tsx prisma/seed.js",
+    "postinstall": "prisma generate",
+    "vercel-build": "prisma generate --schema=prisma/schema.postgres.prisma && next build"
   },
   "dependencies": {
     "@prisma/client": "^6.0.0",
