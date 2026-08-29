@@ -12,14 +12,11 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.js",
     "db:studio": "prisma studio",
-    "db:generate:pg": "prisma generate --schema=prisma/schema.postgres.prisma",
-    "db:push:pg": "prisma db push --schema=prisma/schema.postgres.prisma",
-    "db:seed:pg": "tsx prisma/seed.js",
     "postinstall": "prisma generate",
-    "vercel-build": "prisma generate --schema=prisma/schema.postgres.prisma && next build"
+    "vercel-build": "prisma generate && next build"
   },
   "dependencies": {
-    "@prisma/client": "^6.0.0",
+    "@prisma/client": "^6.19.3",
     "next": "16.3.3",
     "react": "19.2.8",
     "react-dom": "19.2.8",

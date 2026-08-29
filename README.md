@@ -38,43 +38,19 @@ An interactive web application for improving English pronunciation through targe
 
 ## 🚀 Quick Start
 
-### Local Development (SQLite — default)
+### Database (PostgreSQL)
+
+The app uses **PostgreSQL** exclusively — both locally and in production. Set `DATABASE_URL` to your
+Postgres instance (see `.env.example`), then:
 
 ```bash
-# Clone the repository
-git clone https://github.com/talles-dt/lexio-phonos.git
-cd lexio-phonos
-
-# Install dependencies
-npm install
-
-# Set up database
-npx prisma generate
-npx prisma db push
-npx prisma db seed
-
-# Start development server
+npm install          # postinstall runs `prisma generate`
+npm run db:push     # create tables on Postgres
+npm run db:seed     # seed 34 phonemes + 11 drills
 npm run dev
-
-# Open in browser
-# http://localhost:3000
 ```
 
-### Production (PostgreSQL)
-
-The schema is provider-agnostic. For production, set `DATABASE_URL` to your Postgres
-instance and use the Postgres-specific schema (`prisma/schema.postgres.prisma`):
-
-```bash
-# 1. Set DATABASE_URL in .env (see .env.example)
-# 2. Generate the Postgres client + push the schema
-npm run db:generate:pg
-npm run db:push:pg
-npm run db:seed          # seeds 34 phonemes + 11 drills against DATABASE_URL
-```
-
-> The `prisma/seed.js` script is provider-agnostic — it works against either
-> SQLite or PostgreSQL depending on `DATABASE_URL`.
+> Local dev also uses Postgres (e.g. a local Docker instance or Neon). SQLite is no longer supported.
 
 ### Deploy (Vercel)
 
@@ -93,8 +69,7 @@ You must provision a PostgreSQL database and wire it up:
    npm run db:push:pg
    npm run db:seed
    ```
-4. **Deploy.** The `vercel-build` script already runs
-   `prisma generate --schema=prisma/schema.postgres.prisma && next build`, so the
+4. **Deploy.** The `vercel-build` script already runs `prisma generate && next build`, so the
    Prisma Client is generated for PostgreSQL automatically. No extra steps needed.
 5. **Fix the PWA icon 404:** the manifest references `/icons/icon-192.svg` and
    `/icons/icon-512.svg` (already committed under `public/icons/`). If you see a
@@ -124,7 +99,7 @@ NEXT_PUBLIC_APP_URL="https://your-domain.com"
 - **Frontend**: [Next.js 16](https://nextjs.org/) (App Router), [React 19](https://react.dev/), [TypeScript](https://www.typescriptlang.org/)
 - **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
 - **Audio**: [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API), [AudioWorklet](https://developer.mozilla.org/en-US/docs/Web/API/AudioWorklet)
-- **Database**: [Prisma ORM](https://www.prisma.io/), [SQLite](https://www.sqlite.org/) (dev), [PostgreSQL](https://www.postgresql.org/) (prod)
+- **Database**: [Prisma ORM](https://www.prisma.io/), [PostgreSQL](https://www.postgresql.org/) (Neon in production)
 
 ## 🗂️ Project Structure
 
