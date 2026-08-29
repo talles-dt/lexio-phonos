@@ -76,6 +76,34 @@ npm run db:seed          # seeds 34 phonemes + 11 drills against DATABASE_URL
 > The `prisma/seed.js` script is provider-agnostic — it works against either
 > SQLite or PostgreSQL depending on `DATABASE_URL`.
 
+### Deploy (Vercel)
+
+The app requires a real database — **SQLite (`file:./dev.db`) does not work on Vercel**
+(the filesystem is ephemeral and there is no SQLite driver in the serverless runtime).
+You must provision a PostgreSQL database and wire it up:
+
+1. **Provision Postgres** — e.g. Vercel Postgres, Supabase, or Neon. Copy the
+   connection string.
+2. **Set `DATABASE_URL`** in the Vercel project's Environment Variables
+   (Project → Settings → Environment Variables), pointing at your Postgres
+   instance. Example: `postgresql://user:pass@host:5432/lexio`.
+3. **Push the schema + seed** (one-time, from your machine with the env set):
+   ```bash
+   export DATABASE_URL="postgresql://user:pass@host:5432/lexio"
+   npm run db:push:pg
+   npm run db:seed
+   ```
+4. **Deploy.** The `vercel-build` script already runs
+   `prisma generate --schema=prisma/schema.postgres.prisma && next build`, so the
+   Prisma Client is generated for PostgreSQL automatically. No extra steps needed.
+5. **Fix the PWA icon 404:** the manifest references `/icons/icon-192.svg` and
+   `/icons/icon-512.svg` (already committed under `public/icons/`). If you see a
+   `icon-192.png` 404 in the console, clear the old service worker / cache in the
+   browser (the previous manifest pointed at `.png` files that don't exist).
+
+> Note: progress is stored **locally in a cookie** (`lexio_anon_id`) — there is no
+> authentication. Each browser gets its own anonymous ID.
+
 ### Environment Variables
 
 Create a `.env` file in the root directory:
