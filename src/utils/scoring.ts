@@ -6,6 +6,7 @@ import {
   ScoringConfig,
   PhonemeTarget,
   DrillAnalysis,
+  StressTimingScore,
 } from '@/types/pronunciation';
 import { FormantResult, PitchResult } from '@/types/audio';
 import {
@@ -189,23 +190,71 @@ export function calculateTimingScore(
   return Math.max(0, 1 - diff / tolerance);
 }
 
+// Calculate stress timing accuracy: detect if stressed vowels are
+// significantly longer than unstressed ones, compared to target phoneme timings.
+// Input: phonemeSequence with optional `isPrimaryStress`/`isSecondaryStress` flags.
+export function calculateStressTimingAccuracy(
+  detectedFormantTimestampsMs: { startTimeMs: number; endTimeMs: number }[],
+  phonemeSequence: PhonemeTarget[],
+  toleranceRatio: number = 0.35
+): { score: number; stressTiming: StressTimingScore[] } {
+  if (!detectedFormantTimestampsMs.length || !phonemeSequence.length) {
+    return { score: 0, stressTiming: [] };
+  }
+
+  const stressTiming: StressTimingScore[] = phonemeSequence.map((p) => {
+    const targetDurationMs = Math.max(0, (p.endTimeMs ?? 0) - (p.startTimeMs ?? 0));
+    const matched = detectedFormantTimestampsMs.find(
+      (f) => f.startTimeMs <= p.startTimeMs + 20 && f.endTimeMs >= p.endTimeMs - 20
+    );
+    const detectedDurationMs = matched
+      ? Math.max(0, matched.endTimeMs - matched.startTimeMs)
+      : targetDurationMs;
+    const durationRatio = targetDurationMs > 0 ? detectedDurationMs / targetDurationMs : 0;
+    const isStressed = Boolean((p as unknown as Record<string, unknown>).isPrimaryStress) || Boolean((p as unknown as Record<string, unknown>).isSecondaryStress);
+    // Stressed nuclei should be relatively longer and/or more stable; unstressed nuclei often shrink too much.
+    const idealRatio = isStressed ? 1.0 : 0.85;
+    const score = Math.max(0, 1 - Math.abs(durationRatio - idealRatio) / toleranceRatio);
+
+    return {
+      phonemeId: p.phonemeId,
+      position: p.position,
+      startTimeMs: p.startTimeMs,
+      endTimeMs: p.endTimeMs,
+      targetDurationMs,
+      detectedDurationMs,
+      durationRatio,
+      isPrimaryStress: Boolean((p as unknown as Record<string, unknown>).isPrimaryStress),
+      isSecondaryStress: Boolean((p as unknown as Record<string, unknown>).isSecondaryStress),
+      score,
+    };
+  });
+
+  const score = stressTiming.reduce((sum, s) => sum + s.score, 0) / Math.max(1, stressTiming.length);
+  return { score, stressTiming };
+}
+
 // Calculate overall pronunciation score
 export function calculatePronunciationScore(
   gopScores: GOPScore[],
   pitchAccuracy: number,
   timingAccuracy: number,
   formantAccuracy: number,
+  stressTimingAccuracy: number | null = null,
   config: ScoringConfig = DEFAULT_SCORING_CONFIG
 ): PronunciationScore {
   // Calculate average GOP score
   const avgGop = gopScores.reduce((sum, s) => sum + s.gopScore, 0) / gopScores.length;
+
+  const stressTimingComponent = typeof stressTimingAccuracy === 'number' ? config.timingWeight * stressTimingAccuracy * 100 : 0;
 
   // Calculate overall score as weighted average
   const overall = 
     config.gopWeight * avgGop * 100 +
     config.pitchWeight * pitchAccuracy * 100 +
     config.timingWeight * timingAccuracy * 100 +
-    config.formantWeight * formantAccuracy * 100;
+    config.formantWeight * formantAccuracy * 100 +
+    stressTimingComponent;
 
   // Generate suggestions
   const suggestions: string[] = [];
@@ -220,6 +269,10 @@ export function calculatePronunciationScore(
   
   if (timingAccuracy < 0.7) {
     suggestions.push('Practice timing - your duration is significantly different from target');
+  }
+
+  if (typeof stressTimingAccuracy === 'number' && stressTimingAccuracy < 0.7) {
+    suggestions.push('Work on word stress - stressed syllables should be longer and clearer');
   }
 
   // Count unacceptable phonemes
@@ -248,6 +301,7 @@ export function calculatePronunciationScore(
     pitchAccuracy: pitchAccuracy * 100,
     timing: timingAccuracy * 100,
     formantAccuracy: formantAccuracy * 100,
+    ...(typeof stressTimingAccuracy === 'number' ? { stressTimingAccuracy: stressTimingAccuracy * 100 } : {}),
     phonemeBreakdown,
     suggestions,
   };
@@ -319,12 +373,18 @@ export function analyzeDrill(
   // Calculate formant accuracy
   const avgFormantScore = gopScores.reduce((sum, s) => sum + s.gopScore, 0) / gopScores.length;
 
+  // Stress timing: compare detected phoneme durations against target stress pattern.
+  const detectedFormantTimestampsMs = formants.map((f) => ({ startTimeMs: f.timestamp * 1000, endTimeMs: f.timestamp * 1000 }));
+  const stressTimingResult = calculateStressTimingAccuracy(detectedFormantTimestampsMs, phonemeSequence);
+  const stressTimingAccuracy = stressTimingResult.score;
+
   // Calculate overall score
   const score = calculatePronunciationScore(
     gopScores,
     pitchAccuracy,
     timingAccuracy,
-    avgFormantScore
+    avgFormantScore,
+    stressTimingAccuracy
   );
 
   return {

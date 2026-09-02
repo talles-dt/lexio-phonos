@@ -10,7 +10,7 @@ export interface MasteryThresholds {
 }
 
 // Drill categories
-export type DrillCategory = 'MINIMAL_PAIR' | 'VOWEL_REDUCTION' | 'LEXICAL_STRESS' | 'CONSONANT_CLUSTER' | 'CONNECTED_SPEECH' | 'INTONATION';
+export type DrillCategory = 'MINIMAL_PAIR' | 'VOWEL_REDUCTION' | 'LEXICAL_STRESS' | 'CONSONANT_CLUSTER' | 'CONNECTED_SPEECH' | 'INTONATION' | 'STRESS_TIMING';
 
 // Phoneme with sequence data for drills
 export interface DrillPhoneme {
@@ -46,6 +46,18 @@ export interface PronunciationScore {
   suggestions: string[];
 }
 
+// Pronunciation scoring results
+export interface PronunciationScore {
+  overall: number;
+  pitchAccuracy: number;
+  timing: number;
+  formantAccuracy: number;
+  stressTimingAccuracy?: number;
+  phonemeBreakdown: PhonemeScore[];
+  stressTiming?: StressTimingScore[];
+  suggestions: string[];
+}
+
 // GOP (Goodness of Pronunciation) score for a single phoneme
 export interface GOPScore {
   phonemeId: string;
@@ -59,6 +71,20 @@ export interface GOPScore {
   targetF2: number | null;
   isAcceptable: boolean;
   confidence: number;
+}
+
+// Stress timing score for a phoneme/syllable
+export interface StressTimingScore {
+  phonemeId: string;
+  position: number;
+  startTimeMs: number;
+  endTimeMs: number;
+  targetDurationMs: number;
+  detectedDurationMs: number;
+  durationRatio: number;
+  isPrimaryStress: boolean;
+  isSecondaryStress: boolean;
+  score: number;
 }
 
 export interface PhonemeScore {

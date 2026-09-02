@@ -355,6 +355,16 @@ export const DrillCard: React.FC<DrillCardProps> = ({
                     {analysis.scores.formantAccuracy.toFixed(1)}%
                   </div>
                 </div>
+                {typeof analysis.scores.stressTimingAccuracy === 'number' && (
+                  <div className="text-center">
+                    <div className="text-xs lexio-zinc mb-1 lexio-mono">Stress Timing</div>
+                    <div
+                      className={`text-2xl font-bold ${getScoreColor(analysis.scores.stressTimingAccuracy)}`}
+                    >
+                      {analysis.scores.stressTimingAccuracy.toFixed(1)}%
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Phoneme breakdown */}
