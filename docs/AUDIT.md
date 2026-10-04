@@ -50,7 +50,7 @@ Validação local final de 4 de outubro de 2026, com Node 22.22.1, Next 16.3.8 e
 - `npm run build`: build de produção concluído sem depender de DATABASE_URL.
 - `npm run test:e2e`: 12 testes Chromium passaram (34,2 s), usando WAV sintético a 48 kHz como microfone de teste e captura/reamostragem reais do navegador.
 - Axe: sem violações nos critérios automatizáveis WCAG 2 A/AA e 2.1 AA avaliados, em desktop, viewport de 320 px e painel de observações expandido. Isso não certifica conformidade integral; screenshots desktop/mobile foram inspecionadas.
-- `npm audit --omit=dev`: 0 vulnerabilidades conhecidas reportadas. O audit completo ainda reporta os 5 alertas de desenvolvimento descritos abaixo.
+- `npm audit`: 0 vulnerabilidades conhecidas reportadas, incluindo dependências de desenvolvimento (revalidado em 2026-10-04 após instalação limpa).
 - `prisma validate`: esquema válido, com URL local fictícia apenas para validação; nenhum banco foi acessado por esse comando. O seed foi conferido por tipos gerados e integridade do catálogo, mas não executado contra banco remoto.
 - `git diff --check`: sem erros de whitespace.
 - Inspeção heurística de 114 blobs do histórico para formatos de tokens, chaves privadas e URLs de credenciais: nenhuma correspondência suspeita nos padrões examinados. Essa inspeção limitada não substitui um scanner exaustivo de segredos.
@@ -69,7 +69,7 @@ Validação local final de 4 de outubro de 2026, com Node 22.22.1, Next 16.3.8 e
 | R8 | SW versionado e preparação do worker | Recarga offline da aplicação e primeira gravação offline com análise em worker passaram. Preparação inclui dependências do worker; registro do SW sozinho não é tratado como sucesso. |
 | R9 | HTML nativo, CSS e alternativas de gráficos | Teclado, ausência de overflow a 320 px, nomes acessíveis, status e Axe em telas inicial/expandida verificados. Foco e versão mobile conferidos visualmente. |
 | R10 | Rotas públicas somente leitura e rotas retiradas | GET/POST/DELETE de endpoints pessoais devolvem 410/no-store; POST de catálogo devolve 405; gravação não gera POST de dados. Rotas não importam Prisma. Não foram executadas mutações remotas de dados. |
-| R11 | Catálogo único, seed, documentação e CI | 41 fonemas / 12 exercícios com referências válidas; geração/validação/types; workflow inclui lint, tipos, unitários, auditoria de produção, build e navegador. |
+| R11 | Catálogo único, seed, documentação e CI | 41 fonemas / 12 exercícios com referências válidas; geração/validação/types; workflow inclui lint, tipos, unitários, auditoria completa, contratos do lint, build e navegador. |
 
 ### Alcance da entrega
 
@@ -84,6 +84,8 @@ Foram corrigidas a apresentação de /əʊ/ e da tonicidade de _photograph_, al�
 
 Next atualizado para 16.3.8 e Vitest para 5.0.3; tooling DOM não utilizado removido. O override `deepmerge-ts ^8.0.0` corrige [GHSA-ggr8-5vv4-36mx](https://github.com/advisories/GHSA-ggr8-5vv4-36mx) mantendo a API `deepmerge` usada por `@prisma/config`; geração/validação de Prisma são verificadas, sem conexão com banco remoto.
 
-Persistem 5 alertas altos de desenvolvimento na cadeia `eslint-config-next → @next/eslint-plugin-next → fast-glob → micromatch → braces`, referentes a [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm). A versão publicada de `braces` consultada (3.0.3) ainda consta vulnerável. O `npm audit fix --force` sugeria retroceder o preset para Next 14; isso não foi aplicado a um projeto Next 16. O risco remanescente é registrado, não ocultado por uma exceção no auditor. O lint usa padrões controlados pelo repositório; não expõe esse parser a entradas de alunos em produção.
+Os 5 alertas altos restantes foram resolvidos em 2026-10-04 removendo a cadeia `fast-glob → micromatch → braces` do plugin de lint. O advisory [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm) ainda não possui versão corrigida de `braces`. Um override restrito a `@next/eslint-plugin-next` usa o adaptador local `tooling/next-eslint-glob`, baseado em `tinyglobby 0.2.17`, para a única API consumida pelo plugin: `globSync(string, { onlyDirectories: true })`. O adaptador preserva expansão explícita e formato de caminhos; chamadas incompatíveis falham de forma explícita. Não houve downgrade de Next, exclusão de regras ou exceção no auditor.
+
+Quatro testes de contrato verificam resolução de diretórios e diagnósticos reais das regras Next, React Hooks e TypeScript. A CI agora executa `npm audit --audit-level=high` sobre todas as dependências. O README do adaptador documenta seu escopo e a condição para removê-lo em uma futura atualização oficial.
 
 O catálogo final contém 41 fonemas: além das referências ausentes corrigidas inicialmente, foram acrescentados /əʊ/ e /j/ para representar os exemplos britânicos revisados de _photograph_ e _beautiful_. Sequências de frases foram completadas e todos os limites temporais artificiais passaram a `null`, porque não há áudio de referência alinhado que os sustente. As versões anteriores permanecem no histórico Git.

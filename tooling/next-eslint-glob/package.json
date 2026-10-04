@@ -1,0 +1,8 @@
+{
+  "name": "@lexio/next-eslint-glob",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Scoped globSync adapter for @next/eslint-plugin-next root directory discovery",
+  "main": "index.cjs",
+  "dependencies": { "tinyglobby": "0.2.17" }
+}
