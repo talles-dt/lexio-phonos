@@ -1,186 +1,158 @@
 "use client";
-// Hook for audio capture and recording
+import { useCallback, useEffect, useRef, useState } from "react";
+import { AudioCaptureManager } from "@/utils/audioWorklet";
+import { pcmToWav } from "@/utils/audio";
 
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { AudioCaptureManager } from '@/utils/audioWorklet';
-import { pcmToWav } from '@/utils/audio';
-
-export interface RecordingState {
-  isRecording: boolean;
-  isProcessing: boolean;
-  audioBuffer: Float32Array[];
-  audioBlob: Blob | null;
-  audioUrl: string | null;
-  duration: number;
-  error: string | null;
+export interface CapturedAudio {
+  blob: Blob;
+  url: string;
+  samples: Float32Array;
+  sampleRate: number;
 }
-
-interface UseAudioCaptureOptions {
+interface Options {
   targetSampleRate?: number;
   onRecordingStart?: () => void;
-  onRecordingStop?: (audioData: { blob: Blob; url: string; samples: Float32Array; sampleRate: number }) => void;
-  onError?: (error: string) => void;
+  onRecordingStop?: (audio: CapturedAudio) => void | Promise<void>;
 }
-
-export function useAudioCapture(options: UseAudioCaptureOptions = {}) {
-  const { 
-    targetSampleRate = 16000,
-    onRecordingStart,
-    onRecordingStop,
-    onError,
-  } = options;
-
-  const [state, setState] = useState<RecordingState>({
-    isRecording: false,
-    isProcessing: false,
-    audioBuffer: [],
-    audioBlob: null,
-    audioUrl: null,
-    duration: 0,
-    error: null,
-  });
-
-  const audioCaptureRef = useRef<AudioCaptureManager | null>(null);
-  const startTimeRef = useRef<number>(0);
-  const timerRef = useRef<number | null>(null);
-
-  // Initialize audio capture manager
+const initial = {
+  phase: "idle" as "idle" | "starting" | "recording" | "processing",
+  audioUrl: null as string | null,
+  duration: 0,
+  error: null as string | null,
+};
+export function useAudioCapture(options: Options = {}) {
+  const [state, setState] = useState(initial);
+  const callbacks = useRef(options);
   useEffect(() => {
-    audioCaptureRef.current = new AudioCaptureManager(targetSampleRate);
-
+    callbacks.current = options;
+  });
+  const manager = useRef<AudioCaptureManager | null>(null);
+  const phase = useRef(initial.phase);
+  const mounted = useRef(true);
+  const generation = useRef(0);
+  const objectUrl = useRef<string | null>(null);
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const limit = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearTimers = useCallback(() => {
+    if (timer.current) clearInterval(timer.current);
+    if (limit.current) clearTimeout(limit.current);
+  }, []);
+  const revoke = useCallback(() => {
+    if (objectUrl.current) URL.revokeObjectURL(objectUrl.current);
+    objectUrl.current = null;
+  }, []);
+  useEffect(() => {
+    mounted.current = true;
+    const lifecycle = generation;
     return () => {
-      if (audioCaptureRef.current) {
-        audioCaptureRef.current.close();
-      }
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
+      mounted.current = false;
+      lifecycle.current++;
+      clearTimers();
+      revoke();
+      void manager.current?.close();
     };
-  }, [targetSampleRate]);
-
-  // Start recording
-  const startRecording = useCallback(async () => {
-    try {
-      if (state.isRecording) {
-        console.warn('Already recording');
-        return;
-      }
-
-      setState(prev => ({ ...prev, isRecording: true, error: null }));
-      startTimeRef.current = Date.now();
-
-      // Start timer
-      timerRef.current = window.setInterval(() => {
-        setState(prev => ({
-          ...prev,
-          duration: (Date.now() - startTimeRef.current) / 1000,
-        }));
-      }, 100);
-
-      await audioCaptureRef.current?.startRecording();
-      onRecordingStart?.();
-
-      // Trigger haptic feedback if available
-      if ('vibrate' in navigator) {
-        navigator.vibrate([15]);
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to start recording';
-      setState(prev => ({ ...prev, isRecording: false, error: errorMessage }));
-      onError?.(errorMessage);
-    }
-  }, [state.isRecording, onRecordingStart, onError]);
-
-  // Stop recording
+  }, [clearTimers, revoke]);
+  const fail = useCallback(
+    (error: unknown) => {
+      clearTimers();
+      phase.current = "idle";
+      let message =
+        error instanceof Error
+          ? error.message
+          : "Recording failed. Please try again.";
+      if (error instanceof Error && error.name === "NotAllowedError")
+        message =
+          "Microphone permission was denied. Allow the microphone in your browser site settings, then try again.";
+      if (error instanceof Error && error.name === "NotFoundError")
+        message = "No microphone found. Connect a microphone and try again.";
+      if (error instanceof Error && error.name === "NotReadableError")
+        message =
+          "The microphone is busy or unavailable. Close other recording apps and try again.";
+      if (mounted.current)
+        setState((prev) => ({ ...prev, phase: "idle", error: message }));
+    },
+    [clearTimers],
+  );
   const stopRecording = useCallback(async () => {
+    if (phase.current !== "recording") return;
+    phase.current = "processing";
+    clearTimers();
+    setState((prev) => ({ ...prev, phase: "processing" }));
+    const run = generation.current;
     try {
-      if (!state.isRecording) {
-        console.warn('Not recording');
-        return;
-      }
-
-      setState(prev => ({ ...prev, isRecording: false, isProcessing: true }));
-
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-
-      const samples = audioCaptureRef.current?.stopRecording() || new Float32Array();
-
-      // Convert to WAV and create blob URL
-      const blob = pcmToWav(samples, targetSampleRate);
+      const samples = await manager.current!.stopRecording();
+      if (!mounted.current || run !== generation.current) return;
+      const sampleRate = callbacks.current.targetSampleRate ?? 16000;
+      const blob = pcmToWav(samples, sampleRate);
+      revoke();
       const url = URL.createObjectURL(blob);
-
-      // Update state
-      setState(prev => ({
+      objectUrl.current = url;
+      setState((prev) => ({
         ...prev,
-        isProcessing: false,
-        audioBlob: blob,
         audioUrl: url,
-        duration: samples.length / targetSampleRate,
+        duration: samples.length / sampleRate,
       }));
-
-      // Callback with audio data
-      onRecordingStop?.({ blob, url, samples, sampleRate: targetSampleRate });
-
-      // Trigger haptic feedback if available
-      if ('vibrate' in navigator) {
-        navigator.vibrate([10, 50, 10]);
+      await callbacks.current.onRecordingStop?.({
+        blob,
+        url,
+        samples,
+        sampleRate,
+      });
+      if (mounted.current && run === generation.current) {
+        phase.current = "idle";
+        setState((prev) => ({ ...prev, phase: "idle" }));
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to stop recording';
-      setState(prev => ({ ...prev, isProcessing: false, error: errorMessage }));
-      onError?.(errorMessage);
+      if (run === generation.current) fail(error);
     }
-  }, [state.isRecording, targetSampleRate, onRecordingStop, onError]);
-
-  // Pause recording
-  const pauseRecording = useCallback(() => {
-    // For now, just stop and restart
-    if (state.isRecording) {
-      stopRecording();
+  }, [clearTimers, fail, revoke]);
+  const startRecording = useCallback(async () => {
+    if (phase.current !== "idle") return;
+    phase.current = "starting";
+    const run = ++generation.current;
+    revoke();
+    setState({ ...initial, phase: "starting" });
+    manager.current = new AudioCaptureManager(
+      callbacks.current.targetSampleRate ?? 16000,
+      15,
+    );
+    try {
+      await manager.current.startRecording();
+      if (!mounted.current || run !== generation.current) return;
+      phase.current = "recording";
+      setState((prev) => ({ ...prev, phase: "recording" }));
+      callbacks.current.onRecordingStart?.();
+      const started = performance.now();
+      timer.current = setInterval(
+        () =>
+          setState((prev) => ({
+            ...prev,
+            duration: Math.min(15, (performance.now() - started) / 1000),
+          })),
+        100,
+      );
+      limit.current = setTimeout(() => {
+        void stopRecording();
+      }, 15000);
+    } catch (error) {
+      if (run === generation.current) fail(error);
     }
-  }, [state.isRecording, stopRecording]);
-
-  // Clear recording
+  }, [fail, revoke, stopRecording]);
   const clearRecording = useCallback(() => {
-    if (state.audioUrl) {
-      URL.revokeObjectURL(state.audioUrl);
-    }
-
-    setState({
-      isRecording: false,
-      isProcessing: false,
-      audioBuffer: [],
-      audioBlob: null,
-      audioUrl: null,
-      duration: 0,
-      error: null,
-    });
-  }, [state.audioUrl]);
-
-  // Toggle recording
-  const toggleRecording = useCallback(() => {
-    if (state.isRecording) {
-      stopRecording();
-    } else {
-      startRecording();
-    }
-  }, [state.isRecording, startRecording, stopRecording]);
-
+    generation.current++;
+    clearTimers();
+    revoke();
+    void manager.current?.close();
+    phase.current = "idle";
+    setState(initial);
+  }, [clearTimers, revoke]);
   return {
-    state,
+    ...state,
+    isStarting: state.phase === "starting",
+    isRecording: state.phase === "recording",
+    isProcessing: state.phase === "processing",
     startRecording,
     stopRecording,
-    pauseRecording,
     clearRecording,
-    toggleRecording,
-    isRecording: state.isRecording,
-    isProcessing: state.isProcessing,
-    audioBlob: state.audioBlob,
-    audioUrl: state.audioUrl,
-    duration: state.duration,
-    error: state.error,
   };
 }

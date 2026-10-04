@@ -1,8 +1,8 @@
 "use client";
 // Pitch contour visualization
 
-import React, { useRef, useEffect } from 'react';
-import { PitchPoint } from '@/types/pronunciation';
+import React, { useRef, useEffect } from "react";
+import { PitchPoint } from "@/types/pronunciation";
 
 interface PitchContourProps {
   points: PitchPoint[];
@@ -27,7 +27,7 @@ export const PitchContour: React.FC<PitchContourProps> = ({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     // Clear canvas
@@ -51,11 +51,12 @@ export const PitchContour: React.FC<PitchContourProps> = ({
 
     // Transform functions
     const toX = (time: number) => padding.left + time * xScale;
-    const toY = (freq: number) => padding.top + chartHeight - (freq - minFrequency) * yScale;
+    const toY = (freq: number) =>
+      padding.top + chartHeight - (freq - minFrequency) * yScale;
 
     // Draw grid
     if (showGrid) {
-      ctx.strokeStyle = '#27272A';
+      ctx.strokeStyle = "#27272A";
       ctx.lineWidth = 1;
 
       // Vertical grid lines (time)
@@ -67,9 +68,9 @@ export const PitchContour: React.FC<PitchContourProps> = ({
         ctx.lineTo(x, padding.top + chartHeight);
         ctx.stroke();
 
-        ctx.fillStyle = '#71717A';
-        ctx.font = '10px monospace';
-        ctx.textAlign = 'center';
+        ctx.fillStyle = "#A1A1AA";
+        ctx.font = "10px monospace";
+        ctx.textAlign = "center";
         ctx.fillText(`${t.toFixed(1)}s`, x, padding.top + chartHeight + 15);
       }
 
@@ -81,25 +82,25 @@ export const PitchContour: React.FC<PitchContourProps> = ({
         ctx.lineTo(padding.left + chartWidth, y);
         ctx.stroke();
 
-        ctx.fillStyle = '#71717A';
-        ctx.font = '10px monospace';
-        ctx.textAlign = 'right';
+        ctx.fillStyle = "#A1A1AA";
+        ctx.font = "10px monospace";
+        ctx.textAlign = "right";
         ctx.fillText(`${freq}Hz`, padding.left - 10, y + 3);
       }
     }
 
     // Draw target contour (if provided)
     if (targetPoints && targetPoints.length > 0) {
-      ctx.strokeStyle = '#FF9500';
+      ctx.strokeStyle = "#FF9500";
       ctx.lineWidth = 3;
       ctx.setLineDash([5, 5]);
       ctx.beginPath();
-      
+
       let first = true;
       for (const point of targetPoints) {
         const x = toX(point.timestamp);
         const y = toY(point.frequency);
-        
+
         if (first) {
           ctx.moveTo(x, y);
           first = false;
@@ -111,7 +112,7 @@ export const PitchContour: React.FC<PitchContourProps> = ({
       ctx.setLineDash([]);
 
       // Draw target points
-      ctx.fillStyle = '#FF9500';
+      ctx.fillStyle = "#FF9500";
       for (const point of targetPoints) {
         const x = toX(point.timestamp);
         const y = toY(point.frequency);
@@ -123,15 +124,15 @@ export const PitchContour: React.FC<PitchContourProps> = ({
 
     // Draw user contour
     if (points && points.length > 0) {
-      ctx.strokeStyle = '#DC2626';
+      ctx.strokeStyle = "#DC2626";
       ctx.lineWidth = 2;
       ctx.beginPath();
-      
+
       let first = true;
       for (const point of points) {
         const x = toX(point.timestamp);
         const y = toY(point.frequency);
-        
+
         if (first) {
           ctx.moveTo(x, y);
           first = false;
@@ -142,11 +143,11 @@ export const PitchContour: React.FC<PitchContourProps> = ({
       ctx.stroke();
 
       // Draw user points
-      ctx.fillStyle = '#DC2626';
+      ctx.fillStyle = "#DC2626";
       for (const point of points) {
         const x = toX(point.timestamp);
         const y = toY(point.frequency);
-        
+
         // Size based on confidence
         const size = 2 + (point.confidence ?? 0) * 3;
         ctx.beginPath();
@@ -156,34 +157,39 @@ export const PitchContour: React.FC<PitchContourProps> = ({
     }
 
     // Draw axes labels
-    ctx.fillStyle = '#F5F0E8';
-    ctx.font = 'bold 12px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('Time →', padding.left + chartWidth / 2, padding.top - 10);
-    
+    ctx.fillStyle = "#F5F0E8";
+    ctx.font = "bold 12px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Time →", padding.left + chartWidth / 2, padding.top - 10);
+
     ctx.save();
     ctx.translate(25, padding.top + chartHeight / 2);
     ctx.rotate(-Math.PI / 2);
-    ctx.fillText('Frequency (Hz) →', 0, 0);
+    ctx.fillText("Frequency (Hz) →", 0, 0);
     ctx.restore();
 
     // Draw title
-    ctx.fillStyle = '#F5F0E8';
-    ctx.font = 'bold 14px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('Pitch Contour', width / 2, 15);
+    ctx.fillStyle = "#F5F0E8";
+    ctx.font = "bold 14px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Pitch Contour", width / 2, 15);
   }, [points, targetPoints, width, height, duration, showGrid]);
 
   return (
     <div className="lexio-card rounded-lg shadow-lg p-4">
       <canvas
+        role="img"
+        aria-label="Experimental pitch contour over time; see the text summary above."
         ref={canvasRef}
         width={width}
         height={height}
         className="w-full h-auto"
       />
       <div className="mt-2 text-xs lexio-zinc text-center lexio-mono">
-        <p><span className="lexio-crimson">Red</span>: Your pitch | <span className="lexio-amber">Amber</span>: Target contour (dashed)</p>
+        <p>
+          <span className="lexio-crimson">Red</span>: Estimated pitch |{" "}
+          <span className="lexio-amber">Amber</span>: Target contour (dashed)
+        </p>
       </div>
     </div>
   );

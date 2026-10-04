@@ -1,17 +1,23 @@
-// Register service worker for PWA support
-// Must be called from a client component (useEffect)
-
+import { prepareAnalysisWorker } from "./analyzeInWorker";
 export function registerSW(): void {
-  if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) {
+  if (process.env.NODE_ENV !== "production" || !("serviceWorker" in navigator))
     return;
-  }
-
   navigator.serviceWorker
-    .register('/sw.js', { scope: '/' })
-    .then((registration) => {
-      console.log('[PWA] Service worker registered:', registration.scope);
+    .register("/sw.js", { scope: "/", updateViaCache: "none" })
+    .then(() => navigator.serviceWorker.ready)
+    .then(async (registration) => {
+      if (!navigator.serviceWorker.controller)
+        await new Promise<void>((resolve) =>
+          navigator.serviceWorker.addEventListener(
+            "controllerchange",
+            () => resolve(),
+            { once: true },
+          ),
+        );
+      await prepareAnalysisWorker();
+      registration.active?.postMessage("prepare-offline");
     })
-    .catch((error) => {
-      console.warn('[PWA] Service worker registration failed:', error);
+    .catch(() => {
+      /* Online practice still works. UI keeps offline status pending. */
     });
 }

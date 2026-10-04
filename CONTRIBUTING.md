@@ -6,7 +6,7 @@ Thank you for your interest in contributing to Pronunciation Trainer! We welcome
 
 ### Reporting Issues
 
-If you find a bug or have a feature request, please [open an issue](https://github.com/mistralai/pronunciation-trainer/issues) on GitHub. When reporting an issue, please include:
+If you find a bug or have a feature request, please [open an issue](https://github.com/talles-dt/lexio-phonos/issues) on GitHub. When reporting an issue, please include:
 
 - A clear and descriptive title
 - Steps to reproduce the issue
@@ -18,7 +18,7 @@ If you find a bug or have a feature request, please [open an issue](https://gith
 
 ### Suggesting Features
 
-We welcome feature suggestions! Please [open an issue](https://github.com/mistralai/pronunciation-trainer/issues) with:
+We welcome feature suggestions! Please [open an issue](https://github.com/talles-dt/lexio-phonos/issues) with:
 
 - A clear description of the feature
 - The problem it solves

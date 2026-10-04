@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { trackFormants } from './formantTracker';
-import type { FormantResult } from '@/types/audio';
+import { describe, it, expect } from "vitest";
+import { trackFormants } from "./formantTracker";
+import type { FormantResult } from "@/types/audio";
 
 // Build a raw per-frame contour with one F1/F2 swap at frame 3 to simulate the
 // kind of frame-to-frame instability `findFormants` produces in isolation.
@@ -22,8 +22,8 @@ function makeRawContour(): FormantResult[] {
   }));
 }
 
-describe('formant tracker', () => {
-  it('keeps F1/F2 continuity despite a frame swap', () => {
+describe("formant tracker", () => {
+  it("keeps F1/F2 continuity despite a frame swap", () => {
     const tracked = trackFormants(makeRawContour());
     // The swapped frame (index 3) should NOT propagate a 2200Hz F1.
     for (const f of tracked) {
@@ -32,7 +32,7 @@ describe('formant tracker', () => {
     }
   });
 
-  it('smooths frequency estimates (no large per-frame jumps)', () => {
+  it("smooths frequency estimates (no large per-frame jumps)", () => {
     const tracked = trackFormants(makeRawContour());
     for (let i = 1; i < tracked.length; i++) {
       expect(Math.abs(tracked[i].f1 - tracked[i - 1].f1)).toBeLessThan(400);
@@ -40,7 +40,7 @@ describe('formant tracker', () => {
     }
   });
 
-  it('returns empty for empty input', () => {
+  it("returns empty for empty input", () => {
     expect(trackFormants([])).toEqual([]);
   });
 });

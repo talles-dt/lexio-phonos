@@ -1,6 +1,6 @@
 {
   "name": "lexio-phonos",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -10,33 +10,44 @@
     "test": "vitest --run",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "db:seed": "tsx prisma/seed.js",
+    "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate",
-    "vercel-build": "prisma generate && next build"
+    "vercel-build": "prisma generate && next build",
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.e2e.json",
+    "test:lint-dependencies": "node --test tests/lint-dependencies.test.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
-    "next": "16.3.3",
+    "next": "^16.3.8",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "zustand": "^5.0.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4.0.0",
-    "@testing-library/jest-dom": "^6.0.0",
-    "@testing-library/react": "^16.0.0",
-    "@types/node": "^20",
+    "@types/node": "^22.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@vitejs/plugin-react": "^4.3.0",
     "eslint": "^9",
-    "eslint-config-next": "16.3.3",
-    "happy-dom": "^17.0.0",
+    "eslint-config-next": "^16.3.8",
     "prisma": "^6.0.0",
     "tailwindcss": "^4.0.0",
+    "tsx": "^4.20.0",
     "typescript": "^5",
-    "vitest": "^2.0.0"
+    "vitest": "^5.0.3",
+    "fast-glob": "file:tooling/next-eslint-glob"
+  },
+  "engines": {
+    "node": ">=22.12.0 <25"
+  },
+  "overrides": {
+    "deepmerge-ts": "^8.0.0",
+    "@next/eslint-plugin-next": {
+      "fast-glob": "$fast-glob"
+    }
   }
 }

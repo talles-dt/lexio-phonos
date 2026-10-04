@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from 'react';
-import { registerSW } from '@/utils/registerSW';
+import { useEffect } from "react";
+import { registerSW } from "@/utils/registerSW";
 
 export default function SWRegister() {
   useEffect(() => {
