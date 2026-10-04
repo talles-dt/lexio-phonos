@@ -8,15 +8,15 @@
 //   2. exponential smoothing (EMA) of each track's frequency;
 //   3. lightweight outlier rejection via a moving median deviation gate.
 //
-// The output is a smoothed FormantResult[] suitable for stable GOP scoring.
+// The output is a smoothed FormantResult[] for experimental visualization only.
 
-import { FormantResult } from '@/types/audio';
+import { FormantResult } from "@/types/audio";
 
 export interface FormantTrackerOptions {
-  smoothing: number;        // EMA factor for frequency (0 = no smoothing, 1 = frozen)
-  maxJumpHz: number;        // max plausible per-frame change; larger = outlier
-  outlierWindow: number;    // frames considered for the median baseline
-  minVoicedBandHz: number;  // frequencies below this are treated as "no formant"
+  smoothing: number; // EMA factor for frequency (0 = no smoothing, 1 = frozen)
+  maxJumpHz: number; // max plausible per-frame change; larger = outlier
+  outlierWindow: number; // frames considered for the median baseline
+  minVoicedBandHz: number; // frequencies below this are treated as "no formant"
 }
 
 const DEFAULT_OPTIONS: FormantTrackerOptions = {
@@ -48,7 +48,7 @@ function median(values: number[]): number {
  */
 export function trackFormants(
   raw: FormantResult[],
-  options: Partial<FormantTrackerOptions> = {}
+  options: Partial<FormantTrackerOptions> = {},
 ): FormantResult[] {
   const cfg = { ...DEFAULT_OPTIONS, ...options };
   const out: FormantResult[] = [];

@@ -89,6 +89,6 @@ export interface AudioWorkletProcessorConfig {
 }
 
 export interface AudioMessage {
-  type: 'audio-data' | 'vad-result' | 'error' | 'stop';
+  type: "audio-data" | "vad-result" | "error" | "stop";
   payload: Record<string, unknown>;
 }

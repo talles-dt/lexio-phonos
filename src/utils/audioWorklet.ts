@@ -1,312 +1,196 @@
-// AudioWorklet processor for low-latency audio capture
-
-// This file contains the AudioWorklet processor code that runs on the audio thread
-
-const AUDIO_WORKLET_PROCESSOR_CODE = `
+// Runs as JavaScript in the audio rendering thread; never interpolate TypeScript here.
+export const AUDIO_WORKLET_PROCESSOR_CODE = `
 class AudioCaptureProcessor extends AudioWorkletProcessor {
-  private buffer: Float32Array[] = [];
-  private bufferSize: number;
-  private sampleRate: number;
-  private isRecording: boolean = false;
-  private frameCount: number = 0;
-
-  constructor(options: any) {
+  constructor(options) {
     super();
-    this.bufferSize = options.processorOptions.bufferSize || 4096;
-    this.sampleRate = options.processorOptions.sampleRate || 48000;
+    this.frames = [];
+    this.length = 0;
+    this.total = 0;
+    this.limit = Math.floor(sampleRate * options.processorOptions.maxSeconds);
+    this.active = true;
+    this.port.onmessage = (event) => {
+      if (event.data === 'stop') {
+        this.active = false;
+        this.flush();
+        this.port.postMessage({ type: 'stopped' });
+      }
+    };
   }
-
-  process(inputs: Float32Array[][], outputs: Float32Array[][], parameters: Record<string, Float32Array>): boolean {
-    if (!this.isRecording) {
-      return true;
+  flush() {
+    if (!this.length) return;
+    const data = new Float32Array(this.length);
+    let offset = 0;
+    for (const frame of this.frames) { data.set(frame, offset); offset += frame.length; }
+    this.port.postMessage({ type: 'audio-data', data: data.buffer }, [data.buffer]);
+    this.frames = []; this.length = 0;
+  }
+  process(inputs) {
+    const channels = inputs[0];
+    if (!this.active || !channels || !channels.length) return true;
+    const size = Math.min(channels[0].length, this.limit - this.total);
+    if (size <= 0) return true;
+    const mono = new Float32Array(size);
+    for (let i = 0; i < size; i++) {
+      for (const channel of channels) mono[i] += channel[i] / channels.length;
     }
-
-    const input = inputs[0];
-    if (!input || input.length === 0) {
-      return true;
-    }
-
-    // Convert stereo to mono if needed
-    const mono = new Float32Array(input[0].length);
-    for (let i = 0; i < input[0].length; i++) {
-      let sum = 0;
-      for (let j = 0; j < input.length; j++) {
-        sum += input[j][i];
-      }
-      mono[i] = sum / input.length;
-    }
-
-    // Store frame
-    this.buffer.push(mono);
-    this.frameCount += mono.length;
-
-    // Send data to main thread in chunks
-    if (this.buffer.length >= 4) {
-      const chunk = this.buffer.splice(0, 4);
-      const combined = new Float32Array(chunk.reduce((sum, f) => sum + f.length, 0));
-      let offset = 0;
-      for (const frame of chunk) {
-        combined.set(frame, offset);
-        offset += frame.length;
-      }
-
-      this.port.postMessage({
-        type: 'audio-data',
-        data: combined.buffer,
-        timestamp: this.frameCount - combined.length,
-        sampleRate: this.sampleRate,
-      }, [combined.buffer]);
-    }
-
+    this.frames.push(mono); this.length += size; this.total += size;
+    if (this.length >= 2048 || this.total === this.limit) this.flush();
     return true;
   }
-
-  static get parameterDescriptors() {
-    return [
-      {
-        name: 'isRecording',
-        defaultValue: 0,
-        minValue: 0,
-        maxValue: 1,
-        automationRate: 'a-rate',
-      },
-    ];
-  }
 }
-
 registerProcessor('audio-capture-processor', AudioCaptureProcessor);
 `;
 
-// Register the worklet in the browser
-export async function registerAudioWorklet(audioContext: AudioContext): Promise<void> {
-  try {
-    const blob = new Blob([AUDIO_WORKLET_PROCESSOR_CODE], { type: 'application/javascript' });
-    const url = URL.createObjectURL(blob);
-
-    if (audioContext.audioWorklet) {
-      try {
-        await audioContext.audioWorklet.addModule(url);
-        URL.revokeObjectURL(url);
-        return;
-      } catch {
-        // not registered yet, fallback to registering fresh
-      }
-    }
-
-    await audioContext.audioWorklet?.addModule(url);
-    URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error('Failed to register AudioWorklet:', error);
-    throw error;
-  }
-}
-
-// Create audio capture node
-export function createAudioCaptureNode(
-  audioContext: AudioContext,
-  onAudioData: (data: Float32Array, timestamp: number, sampleRate: number) => void,
-  bufferSize: number = 4096
-): AudioWorkletNode {
-  const node = new AudioWorkletNode(
-    audioContext,
-    'audio-capture-processor',
-    {
-      processorOptions: {
-        bufferSize,
-        sampleRate: audioContext.sampleRate,
-      },
-    }
-  );
-
-  node.port.onmessage = (event) => {
-    if (event.data.type === 'audio-data') {
-      const data = new Float32Array(event.data.data);
-      onAudioData(data, event.data.timestamp, event.data.sampleRate);
-    }
-  };
-
-  return node;
-}
-
-// Audio capture manager
 export class AudioCaptureManager {
-  private audioContext: AudioContext | null = null;
-  private mediaStream: MediaStream | null = null;
-  private sourceNode: MediaStreamAudioSourceNode | null = null;
-  private workletNode: AudioWorkletNode | null = null;
-  private isRecording: boolean = false;
-  private audioBuffer: Float32Array[] = [];
-  private startTime: number = 0;
-  private sampleRate: number = 48000;
-  private targetSampleRate: number = 16000;
+  private context: AudioContext | null = null;
+  private stream: MediaStream | null = null;
+  private source: MediaStreamAudioSourceNode | null = null;
+  private node: AudioWorkletNode | null = null;
+  private chunks: Float32Array[] = [];
+  private generation = 0;
+  private stopAck: (() => void) | null = null;
+  private stopReject: ((error: Error) => void) | null = null;
 
-  constructor(targetSampleRate: number = 16000) {
-    this.targetSampleRate = targetSampleRate;
-  }
+  constructor(
+    private targetSampleRate = 16000,
+    private maxSeconds = 15,
+  ) {}
 
   async startRecording(): Promise<void> {
-    if (this.isRecording) {
-      console.warn('Already recording');
-      return;
-    }
-
+    await this.close();
+    const generation = this.generation;
+    if (!navigator.mediaDevices?.getUserMedia)
+      throw new Error(
+        "Microphone access requires HTTPS and a supported browser.",
+      );
     try {
-      // Create audio context if needed
-      if (!this.audioContext) {
-        this.audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-        await registerAudioWorklet(this.audioContext);
+      const context = new AudioContext();
+      this.context = context;
+      await context.resume();
+      if (!context.audioWorklet)
+        throw new Error(
+          "This browser does not support audio recording. Try a current Chrome, Firefox or Safari.",
+        );
+      const url = URL.createObjectURL(
+        new Blob([AUDIO_WORKLET_PROCESSOR_CODE], { type: "text/javascript" }),
+      );
+      try {
+        await context.audioWorklet.addModule(url);
+      } finally {
+        URL.revokeObjectURL(url);
       }
-
-      // Get media stream
-      this.mediaStream = await navigator.mediaDevices.getUserMedia({
+      if (generation !== this.generation)
+        throw new Error("Recording cancelled.");
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
+          channelCount: 1,
           echoCancellation: false,
           noiseSuppression: false,
           autoGainControl: false,
-          channelCount: 1,
-          sampleRate: this.sampleRate,
         },
       });
-
-      // Create source node
-      this.sourceNode = this.audioContext.createMediaStreamSource(this.mediaStream);
-
-      // Create worklet node
-      this.workletNode = createAudioCaptureNode(
-        this.audioContext,
-        (data, timestamp) => this.handleAudioData(data, timestamp),
-        4096
-      );
-
-      // Connect nodes
-      this.sourceNode.connect(this.workletNode);
-      this.workletNode.connect(this.audioContext.destination);
-
-      // Start recording
-      this.isRecording = true;
-      this.audioBuffer = [];
-      this.startTime = performance.now();
-
-      console.log('Audio recording started');
+      if (generation !== this.generation) {
+        stream.getTracks().forEach((track) => track.stop());
+        throw new Error("Recording cancelled.");
+      }
+      this.stream = stream;
+      this.chunks = [];
+      this.source = context.createMediaStreamSource(stream);
+      this.node = new AudioWorkletNode(context, "audio-capture-processor", {
+        processorOptions: { maxSeconds: this.maxSeconds },
+      });
+      this.node.port.onmessage = ({ data }) => {
+        if (data.type === "audio-data")
+          this.chunks.push(new Float32Array(data.data));
+        if (data.type === "stopped") this.stopAck?.();
+      };
+      this.source.connect(this.node);
+      // Processor leaves its output silent; this keeps it pulled without microphone feedback.
+      this.node.connect(context.destination);
     } catch (error) {
-      console.error('Failed to start recording:', error);
-      this.cleanup();
+      if (generation === this.generation) await this.close();
       throw error;
     }
   }
 
-  stopRecording(): Float32Array {
-    if (!this.isRecording) {
-      console.warn('Not recording');
-      return new Float32Array();
-    }
-
-    this.isRecording = false;
-
-    // Disconnect nodes
-    if (this.sourceNode) {
-      this.sourceNode.disconnect();
-    }
-    if (this.workletNode) {
-      this.workletNode.disconnect();
-    }
-
-    // Stop media stream
-    if (this.mediaStream) {
-      this.mediaStream.getTracks().forEach(track => track.stop());
-    }
-
-    // Combine all buffers
-    const totalLength = this.audioBuffer.reduce((sum, b) => sum + b.length, 0);
-    const combined = new Float32Array(totalLength);
-    let offset = 0;
-    for (const buffer of this.audioBuffer) {
-      combined.set(buffer, offset);
-      offset += buffer.length;
-    }
-
-    // Downsample if needed
-    if (this.sampleRate !== this.targetSampleRate) {
-      const downsampled = this.downsample(combined, this.sampleRate, this.targetSampleRate);
-      this.cleanup();
-      return downsampled;
-    }
-
-    this.cleanup();
-    return combined;
-  }
-
-  private handleAudioData(data: Float32Array, timestamp: number): void {
-    if (this.isRecording) {
-      this.audioBuffer.push(data);
-    }
-  }
-
-  private downsample(
-    source: Float32Array,
-    sourceRate: number,
-    targetRate: number
-  ): Float32Array {
-    const ratio = sourceRate / targetRate;
-    const targetLength = Math.floor(source.length / ratio);
-    const result = new Float32Array(targetLength);
-
-    for (let i = 0; i < targetLength; i++) {
-      const start = Math.floor(i * ratio);
-      const end = Math.floor((i + 1) * ratio);
-      let sum = 0;
-      for (let j = start; j < end && j < source.length; j++) {
-        sum += source[j];
+  async stopRecording(): Promise<Float32Array> {
+    const node = this.node;
+    const sourceRate = this.context?.sampleRate;
+    if (!node || !sourceRate) throw new Error("No recording is active.");
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(
+          () =>
+            reject(
+              new Error(
+                "The microphone stopped responding. Please record again.",
+              ),
+            ),
+          2000,
+        );
+        this.stopReject = (error) => {
+          clearTimeout(timeout);
+          reject(error);
+        };
+        this.stopAck = () => {
+          clearTimeout(timeout);
+          resolve();
+        };
+        node.port.postMessage("stop");
+      });
+      // MessagePort preserves ordering: all chunks, including the last partial chunk, precede the ack.
+      const samples = new Float32Array(
+        this.chunks.reduce((sum, chunk) => sum + chunk.length, 0),
+      );
+      let offset = 0;
+      for (const chunk of this.chunks) {
+        samples.set(chunk, offset);
+        offset += chunk.length;
       }
-      result[i] = sum / Math.max(1, end - start);
+      this.stopReject = null;
+      await this.close();
+      if (sourceRate === this.targetSampleRate || !samples.length)
+        return samples;
+      const outputLength = Math.round(
+        (samples.length * this.targetSampleRate) / sourceRate,
+      );
+      const offline = new OfflineAudioContext(
+        1,
+        Math.max(1, outputLength),
+        this.targetSampleRate,
+      );
+      const buffer = offline.createBuffer(1, samples.length, sourceRate);
+      buffer.copyToChannel(samples, 0);
+      const source = offline.createBufferSource();
+      source.buffer = buffer;
+      source.connect(offline.destination);
+      source.start();
+      return new Float32Array(
+        (await offline.startRendering()).getChannelData(0),
+      );
+    } finally {
+      await this.close();
     }
-
-    return result;
-  }
-
-  private cleanup(): void {
-    this.isRecording = false;
-    this.audioBuffer = [];
-
-    if (this.sourceNode) {
-      this.sourceNode.disconnect();
-      this.sourceNode = null;
-    }
-
-    if (this.workletNode) {
-      this.workletNode.disconnect();
-      this.workletNode = null;
-    }
-
-    if (this.mediaStream) {
-      this.mediaStream.getTracks().forEach(track => track.stop());
-      this.mediaStream = null;
-    }
-
-    if (this.audioContext) {
-      // Don't close the audio context as it might be reused
-      // this.audioContext.close();
-    }
-  }
-
-  getRecordingState(): boolean {
-    return this.isRecording;
   }
 
   async close(): Promise<void> {
-    this.cleanup();
-    if (this.audioContext) {
-      await this.audioContext.close();
-      this.audioContext = null;
+    this.generation++;
+    this.stopReject?.(new Error("Recording cancelled."));
+    this.stopReject = null;
+    this.stopAck = null;
+    this.source?.disconnect();
+    this.source = null;
+    if (this.node) {
+      this.node.port.onmessage = null;
+      this.node.port.close();
+      this.node.disconnect();
     }
+    this.node = null;
+    this.stream?.getTracks().forEach((track) => track.stop());
+    this.stream = null;
+    const context = this.context;
+    this.context = null;
+    if (context && context.state !== "closed") await context.close();
+    this.chunks = [];
   }
-}
-
-// Export types
-export interface AudioWorkletMessage {
-  type: 'audio-data' | 'error';
-  data?: Float32Array;
-  timestamp?: number;
-  sampleRate?: number;
-  error?: string;
 }

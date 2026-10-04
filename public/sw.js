@@ -1,1 +1,113 @@
-// Self-contained service worker for Lexio Phonos\n// Cache-first strategy for static assets; network-first for API calls.\n\nconst CACHE_NAME = 'lexio-phonos-v1';\nconst STATIC_ASSETS = [\n  '/',\n  '/manifest.json',\n  '/icons/icon-192.svg',\n  '/icons/icon-180.svg',\n  '/icons/icon-512.svg',\n];\n\n// Install: pre-cache static assets\nself.addEventListener('install', (event) => {\n  event.waitUntil(\n    caches.open(CACHE_NAME).then((cache) => {\n      return cache.addAll(STATIC_ASSETS);\n    }).catch((err) => {\n      console.warn('[SW] Pre-cache failed:', err);\n    })\n  );\n  self.skipWaiting();\n});\n\n// Activate: clean old caches\nself.addEventListener('activate', (event) => {\n  event.waitUntil(\n    caches.keys().then((keys) => {\n      return Promise.all(\n        keys\n          .filter((key) => key !== CACHE_NAME)\n          .map((key) => caches.delete(key))\n      );\n    })\n  );\n  self.clients.claim();\n});\n\n// Fetch: cache-first for static assets, network-first for API\nself.addEventListener('fetch', (event) => {\n  const url = new URL(event.request.url);\n  \n  // API routes: network-first with cache fallback\n  if (url.pathname.startsWith('/api/')) {\n    event.respondWith(\n      fetch(event.request)\n        .then((response) => {\n          // Clone and cache successful API responses (short TTL)\n          if (response.ok) {\n            const clone = response.clone();\n            caches.open(CACHE_NAME).then((cache) => {\n              cache.put(event.request, clone);\n            });\n          }\n          return response;\n        })\n        .catch(() => {\n          // Fallback to cached response if available\n          return caches.match(event.request).then((cached) => {\n            return cached || new Response('{\"error\":\"unavailable\"}', {\n              status: 503,\n              headers: { 'Content-Type': 'application/json' },\n            });\n          });\n        })\n    );\n    return;\n  }\n  \n  // Static assets: cache-first\n  event.respondWith(\n    caches.match(event.request).then((cached) => {\n      if (cached) return cached;\n      return fetch(event.request).then((response) => {\n        // Cache successful responses for static assets\n        if (response.ok && STATIC_ASSETS.some((asset) => \n          event.request.url.endsWith(asset)\n        )) {\n          const clone = response.clone();\n          caches.open(CACHE_NAME).then((cache) => {\n            cache.put(event.request, clone);\n          });\n        }\n        return response;\n      });\n    })\n  );\n});\n
+// Only public application assets belong in this cache. Personal API requests are never cached.
+const CACHE = "lexio-phonos-v2";
+const SHELL = [
+  "/",
+  "/manifest.json",
+  "/icons/icon-192.svg",
+  "/icons/icon-512.svg",
+  "/icons/icon-180.svg",
+];
+self.addEventListener("install", (event) => {
+  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)));
+  // An update waits until old tabs close to avoid mixing assets from two deployments.
+});
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    Promise.all([
+      caches
+        .keys()
+        .then((keys) =>
+          Promise.all(
+            keys
+              .filter((key) => key.startsWith("lexio-phonos-") && key !== CACHE)
+              .map((key) => caches.delete(key)),
+          ),
+        ),
+      self.clients.claim(),
+    ]),
+  );
+});
+async function prepareOffline(client) {
+  const cache = await caches.open(CACHE);
+  const response = await cache.match("/");
+  if (!response) return;
+  const html = await response.text();
+  const urls = [
+    ...new Set(
+      [...html.matchAll(/(?:src|href)="([^" ]+)"/g)]
+        .map((match) => match[1])
+        .filter((url) => url.startsWith("/_next/static/")),
+    ),
+  ];
+  await Promise.all(
+    urls.map(async (url) => {
+      if (!(await cache.match(url))) await cache.add(url);
+    }),
+  );
+  if (urls.some((url) => /\.js(?:\?|$)/.test(url))) {
+    const resources = (await cache.keys()).map((request) => request.url);
+    await cache.put(
+      "/__lexio_offline_ready__",
+      new Response(JSON.stringify(resources)),
+    );
+    client?.postMessage({ type: "offline-ready" });
+  }
+}
+self.addEventListener("message", (event) => {
+  if (event.data === "prepare-offline")
+    event.waitUntil(prepareOffline(event.source).catch(() => {}));
+  if (event.data === "check-offline")
+    event.waitUntil(
+      (async () => {
+        const cache = await caches.open(CACHE);
+        const marker = await cache.match("/__lexio_offline_ready__");
+        if (!marker) return;
+        const resources = await marker.json();
+        if (
+          (await Promise.all(resources.map((url) => cache.match(url)))).every(
+            Boolean,
+          )
+        )
+          event.source?.postMessage({ type: "offline-ready" });
+      })().catch(() => {}),
+    );
+});
+self.addEventListener("fetch", (event) => {
+  const request = event.request;
+  const url = new URL(request.url);
+  if (
+    request.method !== "GET" ||
+    url.origin !== self.location.origin ||
+    url.pathname.startsWith("/api/")
+  )
+    return;
+  const staticAsset =
+    url.pathname.startsWith("/_next/static/") || SHELL.includes(url.pathname);
+  if (request.mode !== "navigate" && !staticAsset) return;
+  event.respondWith(
+    (async () => {
+      const cache = await caches.open(CACHE);
+      if (request.mode !== "navigate") {
+        const cached = await cache.match(request);
+        if (cached) return cached;
+      }
+      try {
+        const response = await fetch(request);
+        if (response.ok && response.type === "basic")
+          await cache.put(
+            request.mode === "navigate" && url.pathname === "/" ? "/" : request,
+            response.clone(),
+          );
+        return response;
+      } catch {
+        return (
+          (await cache.match(request.mode === "navigate" ? "/" : request)) ||
+          new Response(
+            "Offline asset unavailable. Reconnect and reload to prepare offline practice.",
+            { status: 503, headers: { "Content-Type": "text/plain" } },
+          )
+        );
+      }
+    })(),
+  );
+});

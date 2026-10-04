@@ -1,14 +1,12 @@
 // Audio processing utilities
 
-import { AudioConfig, AudioFrame, RingBuffer, VADConfig, AudioFeature, FormantResult, PitchResult } from '@/types/audio';
-
-// Default audio configuration
-const DEFAULT_AUDIO_CONFIG: AudioConfig = {
-  sampleRate: 16000,
-  frameSize: 1024,
-  bufferSize: 4096,
-  channelCount: 1,
-};
+import {
+  RingBuffer,
+  VADConfig,
+  AudioFeature,
+  FormantResult,
+  PitchResult,
+} from "@/types/audio";
 
 // Ring Buffer implementation for audio data
 export class AudioRingBuffer<T> implements RingBuffer<T> {
@@ -133,7 +131,7 @@ export class EnergyVAD {
 export function downsampleAudio(
   source: Float32Array,
   sourceSampleRate: number,
-  targetSampleRate: number
+  targetSampleRate: number,
 ): Float32Array {
   const ratio = sourceSampleRate / targetSampleRate;
   const targetLength = Math.floor(source.length / ratio);
@@ -155,7 +153,7 @@ export function downsampleAudio(
 // Convert stereo to mono
 export function stereoToMono(
   left: Float32Array,
-  right: Float32Array
+  right: Float32Array,
 ): Float32Array {
   const length = Math.min(left.length, right.length);
   const mono = new Float32Array(length);
@@ -168,7 +166,7 @@ export function stereoToMono(
 // Normalize audio to [-1, 1] range
 export function normalizeAudio(
   samples: Float32Array,
-  targetMax: number = 0.99
+  targetMax: number = 0.99,
 ): Float32Array {
   let max = 0;
   for (let i = 0; i < samples.length; i++) {
@@ -189,7 +187,7 @@ export function normalizeAudio(
 // Apply pre-emphasis filter (for formant extraction)
 export function preEmphasis(
   samples: Float32Array,
-  coefficient: number = 0.97
+  coefficient: number = 0.97,
 ): Float32Array {
   const result = new Float32Array(samples.length);
   result[0] = samples[0];
@@ -202,14 +200,13 @@ export function preEmphasis(
 // Calculate autocorrelation for pitch detection
 export function autocorrelation(
   samples: Float32Array,
-  maxLag: number = 1000
+  maxLag: number = 1000,
 ): Float32Array {
-  const n = samples.length;
   const result = new Float32Array(maxLag);
 
   for (let lag = 0; lag < maxLag; lag++) {
     let sum = 0;
-    for (let i = 0; i < n - lag; i++) {
+    for (let i = 0; i < samples.length - lag; i++) {
       sum += samples[i] * samples[i + lag];
     }
     result[lag] = sum;
@@ -221,7 +218,7 @@ export function autocorrelation(
 // Simple pitch detection using autocorrelation with V/UV decision
 export function detectPitch(
   samples: Float32Array,
-  sampleRate: number = 16000
+  sampleRate: number = 16000,
 ): PitchResult | null {
   const preEmphasized = preEmphasis(samples);
   const autocorr = autocorrelation(preEmphasized, Math.floor(sampleRate / 50));
@@ -232,7 +229,11 @@ export function detectPitch(
   let maxLag = 0;
 
   // Skip lag 0 (self-correlation)
-  for (let lag = 1; lag < autocorr.length; lag++) {
+  for (
+    let lag = Math.max(1, Math.floor(sampleRate / 1000));
+    lag < autocorr.length;
+    lag++
+  ) {
     if (autocorr[lag] > maxCorr) {
       maxCorr = autocorr[lag];
       maxLag = lag;
@@ -275,7 +276,10 @@ export function calculateRMS(samples: Float32Array): number {
 export function calculateZeroCrossingRate(samples: Float32Array): number {
   let crossings = 0;
   for (let i = 1; i < samples.length; i++) {
-    if ((samples[i - 1] < 0 && samples[i] >= 0) || (samples[i - 1] >= 0 && samples[i] < 0)) {
+    if (
+      (samples[i - 1] < 0 && samples[i] >= 0) ||
+      (samples[i - 1] >= 0 && samples[i] < 0)
+    ) {
       crossings++;
     }
   }
@@ -283,11 +287,7 @@ export function calculateZeroCrossingRate(samples: Float32Array): number {
 }
 
 // Simple LPC (Linear Predictive Coding) for formant extraction
-export function lpc(
-  samples: Float32Array,
-  order: number = 12
-): Float32Array {
-  const n = samples.length;
+export function lpc(samples: Float32Array, order: number = 12): Float32Array {
   const autocorr = autocorrelation(samples, order + 1);
 
   // Solve Yule-Walker equations using Levinson-Durbin
@@ -311,7 +311,7 @@ export function lpc(
       a[i - j] = temp - k * a[i - j];
     }
 
-    error *= (1 - k * k);
+    error *= 1 - k * k;
   }
 
   return a;
@@ -320,7 +320,7 @@ export function lpc(
 // Find formant frequencies from LPC coefficients
 export function findFormants(
   lpcCoeffs: Float32Array,
-  sampleRate: number = 16000
+  sampleRate: number = 16000,
 ): FormantResult {
   const roots = findPolynomialRoots([...lpcCoeffs].reverse());
 
@@ -405,15 +405,18 @@ function findPolynomialRoots(coeffs: number[]): Complex[] {
 
       const denominatorRe = roots[i].re;
       const denominatorIm = roots[i].im;
-      const denomMag = denominatorRe * denominatorRe + denominatorIm * denominatorIm;
+      const denomMag =
+        denominatorRe * denominatorRe + denominatorIm * denominatorIm;
 
       if (denomMag < tolerance) continue;
 
-      const newRe = (numeratorRe * denominatorRe + numeratorIm * denominatorIm) / denomMag;
-      const newIm = (numeratorIm * denominatorRe - numeratorRe * denominatorIm) / denomMag;
+      const newRe =
+        (numeratorRe * denominatorRe + numeratorIm * denominatorIm) / denomMag;
+      const newIm =
+        (numeratorIm * denominatorRe - numeratorRe * denominatorIm) / denomMag;
 
       const diff = Math.sqrt(
-        (newRe - roots[i].re) ** 2 + (newIm - roots[i].im) ** 2
+        (newRe - roots[i].re) ** 2 + (newIm - roots[i].im) ** 2,
       );
       maxDiff = Math.max(maxDiff, diff);
 
@@ -427,9 +430,7 @@ function findPolynomialRoots(coeffs: number[]): Complex[] {
 }
 
 // Extract audio features
-export function extractAudioFeatures(
-  samples: Float32Array
-): AudioFeature {
+export function extractAudioFeatures(samples: Float32Array): AudioFeature {
   const rms = calculateRMS(samples);
   const zcr = calculateZeroCrossingRate(samples);
 
@@ -443,12 +444,11 @@ export function extractAudioFeatures(
 export function frameAudio(
   samples: Float32Array,
   frameSize: number = 1024,
-  hopSize: number = 512
+  hopSize: number = 512,
 ): Float32Array[] {
   const frames: Float32Array[] = [];
-  const n = samples.length;
 
-  for (let i = 0; i < n - frameSize + 1; i += hopSize) {
+  for (let i = 0; i < samples.length - frameSize + 1; i += hopSize) {
     const frame = samples.slice(i, i + frameSize);
     frames.push(frame);
   }
@@ -468,7 +468,7 @@ export function hammingWindow(size: number): Float32Array {
 // Apply window to frame
 export function applyWindow(
   frame: Float32Array,
-  window: Float32Array
+  window: Float32Array,
 ): Float32Array {
   const result = new Float32Array(frame.length);
   for (let i = 0; i < frame.length; i++) {
@@ -481,7 +481,7 @@ export function applyWindow(
 export function pcmToWav(
   samples: Float32Array,
   sampleRate: number = 16000,
-  channelCount: number = 1
+  channelCount: number = 1,
 ): Blob {
   const buffer = new ArrayBuffer(44 + samples.length * 2);
   const view = new DataView(buffer);
@@ -493,10 +493,10 @@ export function pcmToWav(
     }
   };
 
-  writeString(view, 0, 'RIFF');
+  writeString(view, 0, "RIFF");
   view.setUint32(4, 36 + samples.length * 2, true);
-  writeString(view, 8, 'WAVE');
-  writeString(view, 12, 'fmt ');
+  writeString(view, 8, "WAVE");
+  writeString(view, 12, "fmt ");
   view.setUint32(16, 16, true);
   view.setUint16(20, 1, true); // PCM format
   view.setUint16(22, channelCount, true);
@@ -504,7 +504,7 @@ export function pcmToWav(
   view.setUint32(28, sampleRate * channelCount * 2, true);
   view.setUint16(32, channelCount * 2, true);
   view.setUint16(34, 16, true); // 16-bit
-  writeString(view, 36, 'data');
+  writeString(view, 36, "data");
   view.setUint32(40, samples.length * 2, true);
 
   // Write sample data (convert Float32 to Int16)
@@ -515,7 +515,7 @@ export function pcmToWav(
     view.setInt16(dataOffset + i * 2, int16, true);
   }
 
-  return new Blob([buffer], { type: 'audio/wav' });
+  return new Blob([buffer], { type: "audio/wav" });
 }
 
 // Convert WAV blob to PCM samples
@@ -525,7 +525,7 @@ export async function wavToPcm(blob: Blob): Promise<Float32Array> {
 
   // Check RIFF header
   if (view.getUint32(0, true) !== 0x46464952) {
-    throw new Error('Not a valid WAV file');
+    throw new Error("Not a valid WAV file");
   }
 
   // Find data chunk
@@ -535,11 +535,11 @@ export async function wavToPcm(blob: Blob): Promise<Float32Array> {
       view.getUint8(offset),
       view.getUint8(offset + 1),
       view.getUint8(offset + 2),
-      view.getUint8(offset + 3)
+      view.getUint8(offset + 3),
     );
     const chunkSize = view.getUint32(offset + 4, true);
 
-    if (chunkId === 'data') {
+    if (chunkId === "data") {
       const sampleCount = chunkSize / 2;
       const samples = new Float32Array(sampleCount);
 
@@ -554,7 +554,5 @@ export async function wavToPcm(blob: Blob): Promise<Float32Array> {
     offset += 8 + chunkSize;
   }
 
-  throw new Error('No data chunk found in WAV file');
+  throw new Error("No data chunk found in WAV file");
 }
-
-

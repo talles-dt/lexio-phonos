@@ -215,3 +215,33 @@ canvas.vowel-chart {
   border: 1px solid #27272A;
   border-radius: var(--radius-card);
 }
+
+/* Learner practice shell */
+:root { --color-zinc: #A1A1AA; --color-crimson: #F87171; }
+.muted { color: #A1A1AA; }
+.panel { border: 1px solid #353539; border-radius: 16px; padding: clamp(16px, 3vw, 24px); background: #141416; }
+.eyebrow { color: #00FF88; font: 600 12px/1.5 var(--font-mono); letter-spacing: .07em; text-transform: uppercase; }
+.step-title { font-size: 1.15rem; font-weight: 700; margin-bottom: .6rem; }
+.target-box { padding: 20px; border-radius: 12px; background: #1A1A1D; overflow-wrap: anywhere; }
+.primary, .secondary, .danger { border-radius: 8px; min-height: 44px; padding: 10px 16px; font-family: var(--font-mono); font-size: 13px; border: 1px solid #52525B; cursor: pointer; }
+.primary { background: #00FF88; color: #0D0D0F; border-color: #00FF88; font-weight: 700; }
+.secondary { background: #202024; color: #F5F0E8; }
+.danger { background: #991B1B; color: white; border-color: #FCA5A5; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button[aria-pressed="true"] { outline: 2px solid #00FF88; outline-offset: -2px; }
+.field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; min-width: 0; }
+input, select { background: #202024; border: 1px solid #52525B; border-radius: 8px; padding: 10px; min-height: 44px; min-width: 0; max-width: 100%; color: #F5F0E8; }
+select { text-overflow: ellipsis; }
+.field select { width: 100%; }
+.notice, .error-box { border-radius: 10px; padding: 14px; background: #202024; border: 1px solid #52525B; }
+.error-box { border-color: #FCA5A5; }
+.exercise-row { display: flex; border: 1px solid #353539; border-radius: 8px; }
+.exercise-row.selected { border-color: #00FF88; background: #00FF880A; }
+.favorite { min-width: 44px; min-height: 44px; color: #FFBF69; border-radius: 8px; font-size: 23px; cursor: pointer; }
+summary { cursor: pointer; min-height: 32px; }
+:focus-visible { outline: 3px solid #FFBF69; outline-offset: 4px; }
+progress { accent-color: #00FF88; }
+canvas { max-width: 100%; height: auto; }
+.skip-link { position: absolute; left: -10000px; }
+.skip-link:focus { position: fixed; left: 12px; top: 12px; z-index: 100; background: #141416; padding: 12px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }

@@ -1,7 +1,7 @@
 {
   "name": "Lexio Phonos",
   "short_name": "Lexio",
-  "description": "Master English pronunciation through targeted drills and real-time audio analysis.",
+  "description": "Private English pronunciation practice with guided listening and a local journal.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0D0D0F",
