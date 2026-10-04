@@ -1,23 +1,26 @@
-import { Syne, Source_Serif_4, JetBrains_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import SWRegister from "@/components/SWRegister";
 
-const syne = Syne({
+const syne = localFont({
+  src: "./fonts/syne.woff2",
+  display: "swap",
   variable: "--font-syne",
-  subsets: ["latin"],
-  weight: ["700", "800"],
+  weight: "400 800",
 });
 
-const sourceSerif = Source_Serif_4({
+const sourceSerif = localFont({
+  src: "./fonts/source-serif-4.woff2",
+  display: "swap",
   variable: "--font-source-serif",
-  subsets: ["latin"],
-  weight: ["400", "600", "700"],
+  weight: "200 900",
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const jetbrainsMono = localFont({
+  src: "./fonts/jetbrains-mono.woff2",
+  display: "swap",
   variable: "--font-jetbrains-mono",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: "100 800",
 });
 
 export const metadata = {

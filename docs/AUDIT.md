@@ -89,3 +89,8 @@ Os 5 alertas altos restantes foram resolvidos em 2026-10-04 removendo a cadeia `
 Quatro testes de contrato verificam resolução de diretórios e diagnósticos reais das regras Next, React Hooks e TypeScript. A CI agora executa `npm audit --audit-level=high` sobre todas as dependências. O README do adaptador documenta seu escopo e a condição para removê-lo em uma futura atualização oficial.
 
 O catálogo final contém 41 fonemas: além das referências ausentes corrigidas inicialmente, foram acrescentados /əʊ/ e /j/ para representar os exemplos britânicos revisados de _photograph_ e _beautiful_. Sequências de frases foram completadas e todos os limites temporais artificiais passaram a `null`, porque não há áudio de referência alinhado que os sustente. As versões anteriores permanecem no histórico Git.
+
+
+### Reprodutibilidade do build
+
+Na revalidação de 2026-10-04, duas tentativas da CI falharam no processamento remoto de fontes Google pelo Turbopack, embora builds limpos locais passassem. Syne, Source Serif 4 e JetBrains Mono passaram a ser carregadas por `next/font/local`, com os arquivos WOFF2 versionados, licenças SIL OFL e proveniência em `src/app/fonts/README.md`. As famílias e variáveis CSS foram preservadas; o build não precisa mais consultar o Google Fonts.
