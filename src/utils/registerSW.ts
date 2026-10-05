@@ -7,13 +7,15 @@ export function registerSW(): void {
     .then(() => navigator.serviceWorker.ready)
     .then(async (registration) => {
       if (!navigator.serviceWorker.controller)
-        await new Promise<void>((resolve) =>
+        await new Promise<void>((resolve) => {
           navigator.serviceWorker.addEventListener(
             "controllerchange",
             () => resolve(),
             { once: true },
-          ),
-        );
+          );
+          // A reload can arrive between activation and the initial clients.claim().
+          registration.active?.postMessage("claim-client");
+        });
       await prepareAnalysisWorker();
       registration.active?.postMessage("prepare-offline");
     })

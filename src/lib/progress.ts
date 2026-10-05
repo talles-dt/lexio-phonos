@@ -1,4 +1,6 @@
 import { drills } from "./catalog";
+import { guidedDrills, sessions, taskId } from "./sessions";
+export const MIGRATION_BACKUP_KEY = "lexio-phonos-practice-v1-pre-sessions";
 export const STORAGE_KEY = "lexio-phonos-practice-v1";
 export const MAX_ATTEMPTS = 1000;
 export type Reflection = "unreviewed" | "comfortable" | "again";
@@ -9,8 +11,29 @@ export interface Attempt {
   durationSeconds: number;
   reflection: Reflection;
 }
+export type SessionReflection =
+  | "unreviewed"
+  | "comfortable"
+  | "again"
+  | "uncertain";
+export interface SessionProgress {
+  step: number;
+  wordsAttemptId: string | null;
+  phraseAttemptId: string | null;
+  reflection: SessionReflection;
+  completedAt: string | null;
+}
+export const emptySession = (): SessionProgress => ({
+  step: 0,
+  wordsAttemptId: null,
+  phraseAttemptId: null,
+  reflection: "unreviewed",
+  completedAt: null,
+});
 export interface Progress {
-  version: 1;
+  version: 2;
+  sessions: Record<string, SessionProgress>;
+  lastSessionId: string | null;
   attempts: Attempt[];
   favorites: string[];
   dailyGoal: number;
@@ -18,14 +41,17 @@ export interface Progress {
 }
 export function emptyProgress(): Progress {
   return {
-    version: 1,
+    version: 2,
+    sessions: {},
+    lastSessionId: null,
     attempts: [],
     favorites: [],
     dailyGoal: 3,
     lastDrillId: null,
   };
 }
-const ids = new Set(drills.map((d) => d.id));
+const ids = new Set([...drills, ...guidedDrills].map((d) => d.id));
+const sessionIds = new Set(sessions.map((s) => s.id));
 function object(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }
@@ -34,7 +60,7 @@ export function parseProgress(raw: string): Progress {
   const p: unknown = JSON.parse(raw);
   if (
     !object(p) ||
-    p.version !== 1 ||
+    (p.version !== 1 && p.version !== 2) ||
     !Array.isArray(p.attempts) ||
     p.attempts.length > MAX_ATTEMPTS ||
     !Array.isArray(p.favorites) ||
@@ -62,7 +88,8 @@ export function parseProgress(raw: string): Progress {
       !Number.isFinite(a.durationSeconds) ||
       a.durationSeconds < 0.4 ||
       a.durationSeconds > 15.1 ||
-      !["unreviewed", "comfortable", "again"].includes(String(a.reflection))
+      typeof a.reflection !== "string" ||
+      !["unreviewed", "comfortable", "again"].includes(a.reflection)
     )
       throw new Error("A practice entry is invalid.");
     seen.add(a.id);
@@ -76,8 +103,70 @@ export function parseProgress(raw: string): Progress {
   });
   if (p.favorites.some((id) => typeof id !== "string" || !ids.has(id)))
     throw new Error("A favorite exercise is invalid.");
+  const sessionProgress: Record<string, SessionProgress> = {};
+  if (p.version === 2) {
+    if (
+      !object(p.sessions) ||
+      Object.keys(p.sessions).length > sessions.length ||
+      !(
+        p.lastSessionId === null ||
+        (typeof p.lastSessionId === "string" && sessionIds.has(p.lastSessionId))
+      )
+    )
+      throw new Error("Invalid session progress.");
+    for (const [id, value] of Object.entries(p.sessions)) {
+      if (
+        !sessionIds.has(id) ||
+        !object(value) ||
+        !Number.isInteger(value.step) ||
+        Number(value.step) < 0 ||
+        Number(value.step) > 6 ||
+        typeof value.reflection !== "string" ||
+        !["unreviewed", "comfortable", "again", "uncertain"].includes(
+          value.reflection,
+        ) ||
+        ![value.wordsAttemptId, value.phraseAttemptId].every(
+          (v) =>
+            v === null ||
+            (typeof v === "string" && /^[a-zA-Z0-9-]{1,80}$/.test(v)),
+        ) ||
+        !(
+          value.completedAt === null ||
+          (typeof value.completedAt === "string" &&
+            Number.isFinite(Date.parse(value.completedAt)) &&
+            new Date(value.completedAt).toISOString() === value.completedAt)
+        )
+      )
+        throw new Error("Invalid session entry.");
+      // Deleting a journal entry also invalidates dependent completion evidence.
+      const words = attempts.find(
+        (a) =>
+          a.id === value.wordsAttemptId && a.drillId === taskId(id, "words"),
+      );
+      const phrase = attempts.find(
+        (a) =>
+          a.id === value.phraseAttemptId && a.drillId === taskId(id, "phrase"),
+      );
+      const complete =
+        !!words &&
+        !!phrase &&
+        value.reflection !== "unreviewed" &&
+        value.completedAt !== null;
+      sessionProgress[id] = {
+        step: complete
+          ? 6
+          : Math.min(Number(value.step), !words ? 3 : !phrase ? 4 : 5),
+        wordsAttemptId: words?.id ?? null,
+        phraseAttemptId: phrase?.id ?? null,
+        reflection: value.reflection as SessionReflection,
+        completedAt: complete ? (value.completedAt as string) : null,
+      };
+    }
+  }
   return {
-    version: 1,
+    version: 2,
+    sessions: sessionProgress,
+    lastSessionId: p.version === 2 ? (p.lastSessionId as string | null) : null,
     attempts,
     favorites: [...new Set(p.favorites)] as string[],
     dailyGoal: Number(p.dailyGoal),
@@ -93,6 +182,13 @@ export async function updateProgress(
 ): Promise<Progress> {
   const write = () => {
     const next = parseProgress(JSON.stringify(change(readProgress())));
+    const previous = localStorage.getItem(STORAGE_KEY);
+    if (
+      previous &&
+      JSON.parse(previous).version === 1 &&
+      localStorage.getItem(MIGRATION_BACKUP_KEY) === null
+    )
+      localStorage.setItem(MIGRATION_BACKUP_KEY, previous);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     return next;
   };
@@ -109,7 +205,9 @@ export function addAttempt(progress: Progress, attempt: Attempt): Progress {
   return {
     ...progress,
     attempts: [attempt, ...progress.attempts],
-    lastDrillId: attempt.drillId,
+    lastDrillId: drills.some((d) => d.id === attempt.drillId)
+      ? attempt.drillId
+      : progress.lastDrillId,
   };
 }
 export function mergeProgress(current: Progress, imported: Progress): Progress {
@@ -125,6 +223,8 @@ export function mergeProgress(current: Progress, imported: Progress): Progress {
   return {
     ...current,
     attempts,
+    sessions: { ...imported.sessions, ...current.sessions },
+    lastSessionId: current.lastSessionId ?? imported.lastSessionId,
     favorites: [...new Set([...current.favorites, ...imported.favorites])],
     lastDrillId: current.lastDrillId ?? imported.lastDrillId,
   };

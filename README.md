@@ -4,7 +4,8 @@ Private English pronunciation practice: listen, record and reflect. Built with N
 
 ## Student experience
 
-- 12 guided exercises: exact target text, IPA explanation and articulatory tips.
+- 20 guided sessions for Brazilian Portuguese speakers, grouped into seven sound families (16 focus on word endings). Portuguese instructions, American English targets and local resume. See [curriculum and migration details](docs/GUIDED_SESSIONS.md).
+- 12 existing free-practice exercises: exact target text, IPA explanation and articulatory tips.
 - Search, category/level filters, favorites and a personal review list.
 - Optional on-device English speech synthesis, clearly labelled as a synthetic model.
 - Microphone recording (maximum 15 seconds), inline playback and WAV download.
@@ -40,7 +41,7 @@ Browser tests start the production server on port 3100 and exercise the real Aud
 
 ## Data and privacy
 
-Practice metadata lives in `localStorage` under `lexio-phonos-practice-v1`, limited to 1,000 entries. Export regularly: clearing site data or changing browsers does not synchronize history. Audio stays in memory while the exercise is open; download it to retain it. Backups contain metadata and reflections, not voice recordings. Import merges validated entries by ID and keeps existing entries when IDs collide.
+Practice metadata lives in `localStorage` under `lexio-phonos-practice-v1`, limited to 1,000 entries. The payload is now version 2; version 1 is migrated with an original-text backup under `lexio-phonos-practice-v1-pre-sessions` before writing. Clearing all history deletes this copy as well. Session completion records practice, not mastery. Export regularly: clearing site data or changing browsers does not synchronize history. Audio stays in memory while the exercise is open; download it to retain it. Backups contain metadata and reflections, not voice recordings. Import merges validated entries by ID and keeps existing entries when IDs collide.
 
 Only local English synthesis voices are offered; if none is installed, the model is unavailable and practice remains usable. OS/browser behavior and available accents vary.
 
@@ -48,7 +49,7 @@ The service worker caches only same-origin public application files. APIs and no
 
 ## Catalogue and API changes
 
-`src/data/catalog.json` is the single source for 41 phonemes and 12 exercises. Phoneme boundaries are unknown (`null`); no synthetic timing is treated as forced alignment. IPA examples are accent-dependent.
+`src/data/catalog.json` is the source for 41 phonemes and the 12 existing free-practice exercises. `src/data/sessions.json` holds the guided curriculum and references, with 40 stable task IDs; it is bundled locally, not served by a new API. Phoneme boundaries are unknown (`null`); no synthetic timing is treated as forced alignment. IPA examples are accent-dependent.
 
 - `GET /api/drills`: public catalogue, optional `type` and `difficulty` filters.
 - `GET /api/phonemes`: public dictionary.
@@ -75,3 +76,7 @@ The optional seed uses the same catalogue, valid relation fields and a transacti
 See [audit](docs/AUDIT.md), [roadmap](docs/ROADMAP.md) and [known limitations](KNOWN_ISSUES.md). A branch/PR implementation is distinct from a production deployment. Tests and deployment status are recorded in the audit report.
 
 MIT license. Contributions: [talles-dt/lexio-phonos](https://github.com/talles-dt/lexio-phonos).
+
+## Guided-session release gate
+
+The guided-session update is for preview evaluation. The human student pilot and real Android/Chrome and iPhone/Safari microphone validation remain pending. Synthetic microphone/voice adapter tests are not substitutes for those checks.
