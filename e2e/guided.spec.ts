@@ -52,6 +52,10 @@ for (const number of [1, 5, 10, 13, 15, 17, 18]) {
       .poll(() => audio.evaluate((e: HTMLAudioElement) => e.currentTime))
       .toBeGreaterThan(0);
     await page.getByRole("button", { name: "Continuar", exact: true }).click();
+    // Wait for the saved transition before destroying the document.
+    await expect(
+      page.getByRole("heading", { name: "Aplicar em frase", exact: true }),
+    ).toBeVisible();
     await page.reload();
     await expect(
       page.getByRole("heading", { name: "Aplicar em frase", exact: true }),
