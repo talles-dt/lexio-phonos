@@ -10,6 +10,7 @@ export interface CapturedAudio {
   sampleRate: number;
 }
 interface Options {
+  locale?: "en" | "pt-BR";
   targetSampleRate?: number;
   onRecordingStart?: () => void;
   onRecordingStop?: (audio: CapturedAudio) => void | Promise<void>;
@@ -68,6 +69,17 @@ export function useAudioCapture(options: Options = {}) {
       if (error instanceof Error && error.name === "NotReadableError")
         message =
           "The microphone is busy or unavailable. Close other recording apps and try again.";
+      if (callbacks.current.locale === "pt-BR") {
+        const name = error instanceof Error ? error.name : "";
+        message =
+          name === "NotAllowedError"
+            ? "Acesso ao microfone negado. Autorize o microfone nas configurações deste site e tente novamente."
+            : name === "NotFoundError"
+              ? "Nenhum microfone encontrado. Conecte um microfone e tente novamente."
+              : name === "NotReadableError"
+                ? "O microfone está ocupado ou indisponível. Feche outros aplicativos de gravação e tente novamente."
+                : "Não foi possível concluir a gravação. Verifique o microfone e tente novamente em um navegador atualizado, usando HTTPS.";
+      }
       if (mounted.current)
         setState((prev) => ({ ...prev, phase: "idle", error: message }));
     },

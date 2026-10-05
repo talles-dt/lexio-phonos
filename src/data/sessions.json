@@ -1,0 +1,957 @@
+{
+  "version": 1,
+  "sources": {
+    "coda": "https://periodicos.ufsc.br/index.php/desterro/article/view/2175-8026.2008n55p153",
+    "intelligibility": "https://www.scielo.br/j/rbla/a/JgqNVJb3xvMPbYqRynzKPmr/?lang=en",
+    "voicing": "https://periodicos.ufsc.br/index.php/desterro/article/view/2175-8026.2008n55p41/14843",
+    "consonants": "https://periodicos.ufsc.br/index.php/desterro/article/view/2175-8026.2008n55p111",
+    "dental": "https://repositorio.ufsc.br/handle/123456789/94308",
+    "nasals": "https://www.isca-archive.org/interspeech_2007/kluge07_interspeech.pdf",
+    "ng": "https://repositorio.ufc.br/handle/riufc/86445?locale=en",
+    "awareness": "https://www.scielo.br/j/tla/a/JW5yXxjrmJnDh6nZ6nNPxjs/?lang=en",
+    "clusters": "https://www.scielo.br/j/delta/a/jymFYFqvVkGy3mFj5FNKC8v/?lang=en",
+    "ed": "https://periodicos.ufsc.br/index.php/desterro/article/view/2175-8026.2008n55p83",
+    "vowels": "https://www.scielo.br/j/ides/a/hnQ5msLsspGbn9YJtb5zy7f/?lang=en",
+    "affricates": "https://bdtd.ibict.br/vufind/Record/UFPL_4a97ec4045f283d62f8bbd363fc9c063"
+  },
+  "sessions": [
+    {
+      "id": "s01",
+      "order": 1,
+      "title": "Fechar os lábios: /p, b/",
+      "family": "Oclusivas finais",
+      "accent": "en-US",
+      "level": "A2–B1",
+      "targets": [
+        "p",
+        "b"
+      ],
+      "words": [
+        {
+          "text": "cap",
+          "ipa": "kæp",
+          "meaning": "boné"
+        },
+        {
+          "text": "cab",
+          "ipa": "kæb",
+          "meaning": "táxi"
+        },
+        {
+          "text": "cup",
+          "ipa": "kʌp",
+          "meaning": "xícara"
+        },
+        {
+          "text": "job",
+          "ipa": "dʒɑb",
+          "meaning": "emprego"
+        }
+      ],
+      "phrase": {
+        "text": "I need a cab.",
+        "ipa": "aɪ nid ə kæb",
+        "meaning": "Preciso de um táxi."
+      },
+      "objective": "Terminar a palavra com o fechamento dos lábios, sem criar outra sílaba.",
+      "gesture": "Feche os dois lábios no final. Depois relaxe, sem acrescentar uma vogal. Não é preciso soltar o ar com força.",
+      "reflectionPrompt": "Percebi uma vogal extra depois de fechar os lábios?",
+      "note": "Uma oclusiva pode terminar sem explosão audível. Isso não significa que ela desapareceu.",
+      "sources": [
+        "coda"
+      ]
+    },
+    {
+      "id": "s02",
+      "order": 2,
+      "title": "Terminar em /t, d/",
+      "family": "Oclusivas finais",
+      "accent": "en-US",
+      "level": "A2–B1",
+      "targets": [
+        "t",
+        "d"
+      ],
+      "words": [
+        {
+          "text": "hat",
+          "ipa": "hæt",
+          "meaning": "chapéu"
+        },
+        {
+          "text": "bad",
+          "ipa": "bæd",
+          "meaning": "ruim"
+        },
+        {
+          "text": "seat",
+          "ipa": "sit",
+          "meaning": "assento"
+        },
+        {
+          "text": "seed",
+          "ipa": "sid",
+          "meaning": "semente"
+        }
+      ],
+      "phrase": {
+        "text": "Take a seat.",
+        "ipa": "teɪk ə sit",
+        "meaning": "Sente-se."
+      },
+      "objective": "Manter /t, d/ finais distintos de /tʃ, dʒ/, sem acrescentar uma sílaba.",
+      "gesture": "Toque a região logo atrás dos dentes superiores com a ponta da língua para fechar a passagem de ar. Evite arrastar o final para “tch” ou “dj”.",
+      "reflectionPrompt": "Meu final virou outro som ou ganhou uma sílaba?",
+      "note": "Na fala americana há variantes de /t/, incluindo fechamento glotal. Esta sessão explora a forma cuidadosa, sem exigir uma explosão.",
+      "sources": [
+        "coda",
+        "intelligibility"
+      ]
+    },
+    {
+      "id": "s03",
+      "order": 3,
+      "title": "Fechar atrás: /k, ɡ/",
+      "family": "Oclusivas finais",
+      "accent": "en-US",
+      "level": "A2–B1",
+      "targets": [
+        "k",
+        "ɡ"
+      ],
+      "words": [
+        {
+          "text": "back",
+          "ipa": "bæk",
+          "meaning": "costas / de volta"
+        },
+        {
+          "text": "bag",
+          "ipa": "bæɡ",
+          "meaning": "bolsa"
+        },
+        {
+          "text": "pick",
+          "ipa": "pɪk",
+          "meaning": "escolher"
+        },
+        {
+          "text": "big",
+          "ipa": "bɪɡ",
+          "meaning": "grande"
+        }
+      ],
+      "phrase": {
+        "text": "Take the bag.",
+        "ipa": "teɪk ðə bæɡ",
+        "meaning": "Pegue a bolsa."
+      },
+      "objective": "Fechar a palavra atrás da boca, sem uma vogal após /k, ɡ/.",
+      "gesture": "Eleve a parte posterior da língua até o palato mole. Termine nesse fechamento; não reabra a boca para dizer uma vogal adicional.",
+      "reflectionPrompt": "Ouvi uma vogal depois de /k/ ou /ɡ/?",
+      "note": "Não tente produzir um final mais forte. O fechamento pode ser pouco audível.",
+      "sources": [
+        "coda"
+      ]
+    },
+    {
+      "id": "s04",
+      "order": 4,
+      "title": "Ouvir o contraste: surdo e sonoro",
+      "family": "Oclusivas finais",
+      "accent": "en-US",
+      "level": "A2–B1",
+      "targets": [
+        "p",
+        "b",
+        "k",
+        "ɡ"
+      ],
+      "words": [
+        {
+          "text": "cap",
+          "ipa": "kæp",
+          "meaning": "boné"
+        },
+        {
+          "text": "cab",
+          "ipa": "kæb",
+          "meaning": "táxi"
+        },
+        {
+          "text": "back",
+          "ipa": "bæk",
+          "meaning": "de volta"
+        },
+        {
+          "text": "bag",
+          "ipa": "bæɡ",
+          "meaning": "bolsa"
+        }
+      ],
+      "phrase": {
+        "text": "I said cab.",
+        "ipa": "aɪ sɛd kæb",
+        "meaning": "Eu disse táxi."
+      },
+      "objective": "Explorar pistas que distinguem /p–b/ e /k–ɡ/ no final.",
+      "gesture": "Alterne cap/cab e back/bag. Compare também a vogal: em contextos equivalentes, ela costuma ser mais curta antes da consoante surda. Não force vibração no final.",
+      "reflectionPrompt": "Consegui perceber alguma diferença além da força da consoante?",
+      "note": "Duração é uma pista relativa, não uma regra de milissegundos. O app não mede acerto de vozeamento.",
+      "sources": [
+        "voicing"
+      ]
+    },
+    {
+      "id": "s05",
+      "order": 5,
+      "title": "Ar contínuo: /f, v/",
+      "family": "Fricativas e africadas finais",
+      "accent": "en-US",
+      "level": "A2–B1",
+      "targets": [
+        "f",
+        "v"
+      ],
+      "words": [
+        {
+          "text": "leaf",
+          "ipa": "lif",
+          "meaning": "folha"
+        },
+        {
+          "text": "leave",
+          "ipa": "liv",
+          "meaning": "sair"
+        },
+        {
+          "text": "safe",
+          "ipa": "seɪf",
+          "meaning": "seguro"
+        },
+        {
+          "text": "save",
+          "ipa": "seɪv",
+          "meaning": "salvar"
+        }
+      ],
+      "phrase": {
+        "text": "Save the file.",
+        "ipa": "seɪv ðə faɪl",
+        "meaning": "Salve o arquivo."
+      },
+      "objective": "Preservar a fricção e o contraste de /f, v/ sem vogal extra.",
+      "gesture": "Encoste levemente os dentes superiores no lábio inferior e deixe o ar passar. Compare leaf/leave: observe a fricção e a vogal anterior.",
+      "reflectionPrompt": "Mantive o final sem acrescentar outra sílaba?",
+      "note": "Um /v/ final pode perder parte da vibração. Não sustente a garganta à força.",
+      "sources": [
+        "consonants"
+      ]
+    },
+    {
+      "id": "s06",
+      "order": 6,
+      "title": "Sibilantes: /s, z/",
+      "family": "Fricativas e africadas finais",
+      "accent": "en-US",
+      "level": "A2–B1",
+      "targets": [
+        "s",
+        "z"
+      ],
+      "words": [
+        {
+          "text": "rice",
+          "ipa": "raɪs",
+          "meaning": "arroz"
+        },
+        {
+          "text": "rise",
+          "ipa": "raɪz",
+          "meaning": "subir"
+        },
+        {
+          "text": "bus",
+          "ipa": "bʌs",
+          "meaning": "ônibus"
+        },
+        {
+          "text": "buzz",
+          "ipa": "bʌz",
+          "meaning": "zumbido"
+        }
+      ],
+      "phrase": {
+        "text": "The rice is ready.",
+        "ipa": "ðə raɪs ɪz ˈrɛdi",
+        "meaning": "O arroz está pronto."
+      },
+      "objective": "Distinguir /s/ e /z/ finais em palavras com significados diferentes.",
+      "gesture": "Mantenha um canal estreito para o ar perto da região atrás dos dentes. Alterne rice/rise e bus/buzz, ouvindo também a vogal anterior.",
+      "reflectionPrompt": "Rice e rise ficaram distinguíveis para mim?",
+      "note": "Pratique primeiro a palavra isolada. A palavra seguinte pode mudar pistas acústicas na fala encadeada.",
+      "sources": [
+        "intelligibility"
+      ]
+    },
+    {
+      "id": "s07",
+      "order": 7,
+      "title": "Fricção posterior: /ʃ, ʒ/",
+      "family": "Fricativas e africadas finais",
+      "accent": "en-US",
+      "level": "A2–B1",
+      "targets": [
+        "ʃ",
+        "ʒ"
+      ],
+      "words": [
+        {
+          "text": "fish",
+          "ipa": "fɪʃ",
+          "meaning": "peixe"
+        },
+        {
+          "text": "wish",
+          "ipa": "wɪʃ",
+          "meaning": "desejo"
+        },
+        {
+          "text": "beige",
+          "ipa": "beɪʒ",
+          "meaning": "bege"
+        },
+        {
+          "text": "massage",
+          "ipa": "məˈsɑʒ",
+          "meaning": "massagem"
+        }
+      ],
+      "phrase": {
+        "text": "The bag is beige.",
+        "ipa": "ðə bæɡ ɪz beɪʒ",
+        "meaning": "A bolsa é bege."
+      },
+      "objective": "Terminar em fricção sem inserir uma vogal depois.",
+      "gesture": "Aproxime a parte da frente da língua da região um pouco atrás daquela usada para /s/. Deixe o ar passar sem fechar completamente.",
+      "reflectionPrompt": "A fricção terminou sem uma vogal adicional?",
+      "note": "/ʒ/ final é menos frequente. Beige e massage ampliam o repertório; não formam um par mínimo com fish e wish.",
+      "sources": [
+        "consonants",
+        "affricates"
+      ]
+    },
+    {
+      "id": "s08",
+      "order": 8,
+      "title": "Fechar e soltar: /tʃ, dʒ/",
+      "family": "Fricativas e africadas finais",
+      "accent": "en-US",
+      "level": "A2–B1",
+      "targets": [
+        "tʃ",
+        "dʒ"
+      ],
+      "words": [
+        {
+          "text": "rich",
+          "ipa": "rɪtʃ",
+          "meaning": "rico"
+        },
+        {
+          "text": "ridge",
+          "ipa": "rɪdʒ",
+          "meaning": "crista de montanha"
+        },
+        {
+          "text": "match",
+          "ipa": "mætʃ",
+          "meaning": "partida / fósforo"
+        },
+        {
+          "text": "badge",
+          "ipa": "bædʒ",
+          "meaning": "crachá"
+        }
+      ],
+      "phrase": {
+        "text": "Show your badge.",
+        "ipa": "ʃoʊ jʊr bædʒ",
+        "meaning": "Mostre seu crachá."
+      },
+      "objective": "Preservar o fechamento seguido de fricção da africada final.",
+      "gesture": "Faça um breve fechamento da língua atrás da região alveolar e solte em fricção no mesmo gesto. Não acrescente uma vogal após a fricção.",
+      "reflectionPrompt": "Percebi o fechamento antes da fricção?",
+      "note": "Rich/ridge é um par mínimo. Match/badge é um conjunto de prática, não um par mínimo.",
+      "sources": [
+        "affricates",
+        "consonants"
+      ]
+    },
+    {
+      "id": "s09",
+      "order": 9,
+      "title": "Dentais: /θ, ð/",
+      "family": "Fricativas e africadas finais",
+      "accent": "en-US",
+      "level": "A2–B1",
+      "targets": [
+        "θ",
+        "ð"
+      ],
+      "words": [
+        {
+          "text": "teeth",
+          "ipa": "tiθ",
+          "meaning": "dentes"
+        },
+        {
+          "text": "both",
+          "ipa": "boʊθ",
+          "meaning": "ambos"
+        },
+        {
+          "text": "breathe",
+          "ipa": "brið",
+          "meaning": "respirar"
+        },
+        {
+          "text": "smooth",
+          "ipa": "smuð",
+          "meaning": "liso"
+        }
+      ],
+      "phrase": {
+        "text": "Breathe in.",
+        "ipa": "brið ɪn",
+        "meaning": "Inspire."
+      },
+      "objective": "Experimentar o gesto dental, evitando trocar automaticamente o som por outra consoante.",
+      "gesture": "Aproxime a ponta da língua dos dentes superiores ou coloque-a ligeiramente entre os dentes. Deixe o ar passar sem morder. Compare os finais das quatro palavras.",
+      "reflectionPrompt": "Consegui manter uma passagem de ar sem fechar como /t/ ou /d/?",
+      "note": "Breathe é verbo e termina em /ð/. Breath, o substantivo, termina em /θ/.",
+      "sources": [
+        "dental"
+      ]
+    },
+    {
+      "id": "s10",
+      "order": 10,
+      "title": "Fechar pelo nariz: /m, n/",
+      "family": "Nasais e lateral finais",
+      "accent": "en-US",
+      "level": "A2–B1",
+      "targets": [
+        "m",
+        "n"
+      ],
+      "words": [
+        {
+          "text": "sum",
+          "ipa": "sʌm",
+          "meaning": "soma"
+        },
+        {
+          "text": "sun",
+          "ipa": "sʌn",
+          "meaning": "sol"
+        },
+        {
+          "text": "seam",
+          "ipa": "sim",
+          "meaning": "costura"
+        },
+        {
+          "text": "seen",
+          "ipa": "sin",
+          "meaning": "visto"
+        }
+      ],
+      "phrase": {
+        "text": "Look at the sun.",
+        "ipa": "lʊk æt ðə sʌn",
+        "meaning": "Olhe para o sol."
+      },
+      "objective": "Preservar a diferença entre o fechamento dos lábios e o da língua.",
+      "gesture": "Para /m/, feche os lábios; para /n/, toque atrás dos dentes superiores com a língua. Em ambos, deixe o ar passar pelo nariz, sem criar uma vogal extra.",
+      "reflectionPrompt": "Percebi lugares de fechamento diferentes em sum e sun?",
+      "note": "A vogal pode ficar nasalizada também em inglês. O objetivo é manter as pistas da consoante, não eliminar toda nasalização.",
+      "sources": [
+        "nasals"
+      ]
+    },
+    {
+      "id": "s11",
+      "order": 11,
+      "title": "O final de sing: /ŋ/",
+      "family": "Nasais e lateral finais",
+      "accent": "en-US",
+      "level": "A2–B1",
+      "targets": [
+        "n",
+        "ŋ"
+      ],
+      "words": [
+        {
+          "text": "sin",
+          "ipa": "sɪn",
+          "meaning": "pecado"
+        },
+        {
+          "text": "sing",
+          "ipa": "sɪŋ",
+          "meaning": "cantar"
+        },
+        {
+          "text": "thin",
+          "ipa": "θɪn",
+          "meaning": "fino"
+        },
+        {
+          "text": "thing",
+          "ipa": "θɪŋ",
+          "meaning": "coisa"
+        }
+      ],
+      "phrase": {
+        "text": "Sing with me.",
+        "ipa": "sɪŋ wɪð mi",
+        "meaning": "Cante comigo."
+      },
+      "objective": "Distinguir /n/ e /ŋ/ sem acrescentar /ɡ/ ao final de sing.",
+      "gesture": "Para /ŋ/, eleve a parte posterior da língua ao palato mole e deixe o ar passar pelo nariz. Termine sem uma soltura de /ɡ/.",
+      "reflectionPrompt": "Sing terminou no som nasal ou ganhou /ɡ/ e uma vogal?",
+      "note": "Nesta referência, sing termina em /ŋ/. Isso não implica retirar /ɡ/ de todas as palavras escritas com ng, como finger.",
+      "sources": [
+        "ng",
+        "awareness"
+      ]
+    },
+    {
+      "id": "s12",
+      "order": 12,
+      "title": "A lateral final: /l/",
+      "family": "Nasais e lateral finais",
+      "accent": "en-US",
+      "level": "A2–B1",
+      "targets": [
+        "l"
+      ],
+      "words": [
+        {
+          "text": "feel",
+          "ipa": "fil",
+          "meaning": "sentir"
+        },
+        {
+          "text": "fill",
+          "ipa": "fɪl",
+          "meaning": "encher"
+        },
+        {
+          "text": "full",
+          "ipa": "fʊl",
+          "meaning": "cheio"
+        },
+        {
+          "text": "school",
+          "ipa": "skul",
+          "meaning": "escola"
+        }
+      ],
+      "phrase": {
+        "text": "I feel well.",
+        "ipa": "aɪ fil wɛl",
+        "meaning": "Eu me sinto bem."
+      },
+      "objective": "Explorar a lateral final na referência americana, evitando substituí-la automaticamente por /w/.",
+      "gesture": "Experimente tocar atrás dos dentes superiores com a ponta da língua e deixar o ar sair pelos lados. A parte posterior da língua pode ficar elevada.",
+      "reflectionPrompt": "Percebi um gesto lateral no final?",
+      "note": "Há variação de /l/ entre falantes e sotaques. Esta é uma opção articulatória, não uma exigência de identidade de sotaque.",
+      "sources": [
+        "awareness",
+        "intelligibility"
+      ]
+    },
+    {
+      "id": "s13",
+      "order": 13,
+      "title": "Duas obstruintes no final",
+      "family": "Encontros consonantais finais",
+      "accent": "en-US",
+      "level": "A2–B1",
+      "targets": [
+        "k",
+        "t",
+        "p",
+        "s"
+      ],
+      "words": [
+        {
+          "text": "act",
+          "ipa": "ækt",
+          "meaning": "agir"
+        },
+        {
+          "text": "kept",
+          "ipa": "kɛpt",
+          "meaning": "guardou"
+        },
+        {
+          "text": "desk",
+          "ipa": "dɛsk",
+          "meaning": "mesa"
+        },
+        {
+          "text": "last",
+          "ipa": "læst",
+          "meaning": "último"
+        }
+      ],
+      "phrase": {
+        "text": "Check the desk.",
+        "ipa": "tʃɛk ðə dɛsk",
+        "meaning": "Confira a mesa."
+      },
+      "objective": "Passar de uma consoante a outra sem inserir uma vogal no encontro final.",
+      "gesture": "Monte o encontro devagar: posicione o primeiro gesto e passe ao segundo. Depois diga a palavra inteira. Não é necessário soltar cada oclusiva separadamente.",
+      "reflectionPrompt": "Criei uma sílaba entre as duas consoantes?",
+      "note": "A fala encadeada admite reduções. Aqui praticamos uma forma cuidadosa, sem tratar toda redução como erro.",
+      "sources": [
+        "clusters"
+      ]
+    },
+    {
+      "id": "s14",
+      "order": 14,
+      "title": "Nasal ou lateral + consoante",
+      "family": "Encontros consonantais finais",
+      "accent": "en-US",
+      "level": "A2–B1",
+      "targets": [
+        "n",
+        "d",
+        "t",
+        "l",
+        "p",
+        "m",
+        "k"
+      ],
+      "words": [
+        {
+          "text": "hand",
+          "ipa": "hænd",
+          "meaning": "mão"
+        },
+        {
+          "text": "tent",
+          "ipa": "tɛnt",
+          "meaning": "barraca"
+        },
+        {
+          "text": "help",
+          "ipa": "hɛlp",
+          "meaning": "ajuda"
+        },
+        {
+          "text": "milk",
+          "ipa": "mɪlk",
+          "meaning": "leite"
+        }
+      ],
+      "phrase": {
+        "text": "I need help.",
+        "ipa": "aɪ nid hɛlp",
+        "meaning": "Preciso de ajuda."
+      },
+      "objective": "Coordenar a nasal ou lateral com a consoante seguinte, sem acrescentar uma vogal.",
+      "gesture": "Em hand/tent, passe do fechamento nasal ao final oral. Em help/milk, passe do gesto lateral ao fechamento final. Use a palavra inteira após ensaiar.",
+      "reflectionPrompt": "Mantive os dois gestos sem criar uma sílaba?",
+      "note": "As palavras são conjuntos de prática de encontros diferentes, não pares mínimos.",
+      "sources": [
+        "clusters"
+      ]
+    },
+    {
+      "id": "s15",
+      "order": 15,
+      "title": "O final que marca plural e rotina",
+      "family": "Terminações gramaticais",
+      "accent": "en-US",
+      "level": "A2–B1",
+      "targets": [
+        "s",
+        "z",
+        "ɪ"
+      ],
+      "words": [
+        {
+          "text": "cats",
+          "ipa": "kæts",
+          "meaning": "gatos"
+        },
+        {
+          "text": "dogs",
+          "ipa": "dɔɡz",
+          "meaning": "cães"
+        },
+        {
+          "text": "buses",
+          "ipa": "ˈbʌsɪz",
+          "meaning": "ônibus (plural)"
+        },
+        {
+          "text": "watches",
+          "ipa": "ˈwɑtʃɪz",
+          "meaning": "assiste / relógios"
+        }
+      ],
+      "phrase": {
+        "text": "She watches the dogs.",
+        "ipa": "ʃi ˈwɑtʃɪz ðə dɔɡz",
+        "meaning": "Ela observa os cães."
+      },
+      "objective": "Escolher /s/, /z/ ou /ɪz/ pelo som final da base, não só pela letra.",
+      "gesture": "Após som surdo não sibilante, use /s/; após som sonoro não sibilante, /z/. Após /s z ʃ ʒ tʃ dʒ/, a terminação tem uma sílaba: /ɪz/.",
+      "reflectionPrompt": "Mantive a terminação e a sílaba adicional apenas onde ela é esperada?",
+      "note": "Cats e dogs têm uma sílaba; buses e watches têm duas. Há variação legítima da vogal átona de /ɪz/.",
+      "sources": [
+        "clusters"
+      ]
+    },
+    {
+      "id": "s16",
+      "order": 16,
+      "title": "O passado que se ouve: -ed",
+      "family": "Terminações gramaticais",
+      "accent": "en-US",
+      "level": "A2–B1",
+      "targets": [
+        "t",
+        "d",
+        "ɪ"
+      ],
+      "words": [
+        {
+          "text": "worked",
+          "ipa": "wɝkt",
+          "meaning": "trabalhou"
+        },
+        {
+          "text": "played",
+          "ipa": "pleɪd",
+          "meaning": "brincou / jogou"
+        },
+        {
+          "text": "wanted",
+          "ipa": "ˈwɑntɪd",
+          "meaning": "quis"
+        },
+        {
+          "text": "needed",
+          "ipa": "ˈnidɪd",
+          "meaning": "precisou"
+        }
+      ],
+      "phrase": {
+        "text": "We worked and played.",
+        "ipa": "wi wɝkt ən pleɪd",
+        "meaning": "Nós trabalhamos e brincamos."
+      },
+      "objective": "Distinguir /t/, /d/ e /ɪd/ em verbos regulares no passado.",
+      "gesture": "Após /t/ ou /d/, use a sílaba /ɪd/. Nos demais casos, use /t/ após som surdo e /d/ após som sonoro. Observe o último som, não a última letra.",
+      "reflectionPrompt": "Worked/played ficaram com uma sílaba e wanted/needed com duas?",
+      "note": "O foco são verbos regulares. Alguns adjetivos em -ed têm pronúncias próprias. A vogal átona pode variar.",
+      "sources": [
+        "ed"
+      ]
+    },
+    {
+      "id": "s17",
+      "order": 17,
+      "title": "Começar pelo /s/",
+      "family": "Encontros consonantais iniciais",
+      "accent": "en-US",
+      "level": "A2–B1",
+      "targets": [
+        "s",
+        "t",
+        "k",
+        "m",
+        "r"
+      ],
+      "words": [
+        {
+          "text": "stop",
+          "ipa": "stɑp",
+          "meaning": "parar"
+        },
+        {
+          "text": "school",
+          "ipa": "skul",
+          "meaning": "escola"
+        },
+        {
+          "text": "small",
+          "ipa": "smɔl",
+          "meaning": "pequeno"
+        },
+        {
+          "text": "street",
+          "ipa": "strit",
+          "meaning": "rua"
+        }
+      ],
+      "phrase": {
+        "text": "The school is small.",
+        "ipa": "ðə skul ɪz smɔl",
+        "meaning": "A escola é pequena."
+      },
+      "objective": "Começar a palavra pelo encontro consonantal, sem vogal antes do /s/.",
+      "gesture": "Sustente /s/ brevemente e passe diretamente ao próximo gesto: /st/, /sk/, /sm/. Em street, una /s/, /t/ e /r/ gradualmente.",
+      "reflectionPrompt": "Minha palavra começou pelo /s/ ou por uma vogal?",
+      "note": "Não é necessário aspirar fortemente /p t k/ após /s/ na mesma sílaba.",
+      "sources": [
+        "clusters"
+      ]
+    },
+    {
+      "id": "s18",
+      "order": 18,
+      "title": "Duas vogais: sheep e ship",
+      "family": "Contrastes vocálicos",
+      "accent": "en-US",
+      "level": "A2–B1",
+      "targets": [
+        "i",
+        "ɪ"
+      ],
+      "words": [
+        {
+          "text": "sheep",
+          "ipa": "ʃip",
+          "meaning": "ovelha"
+        },
+        {
+          "text": "ship",
+          "ipa": "ʃɪp",
+          "meaning": "navio"
+        },
+        {
+          "text": "leave",
+          "ipa": "liv",
+          "meaning": "sair"
+        },
+        {
+          "text": "live",
+          "ipa": "lɪv",
+          "meaning": "morar"
+        }
+      ],
+      "phrase": {
+        "text": "I can see the ship.",
+        "ipa": "aɪ kən si ðə ʃɪp",
+        "meaning": "Consigo ver o navio."
+      },
+      "objective": "Explorar duas qualidades vocálicas em vez de usar sempre o /i/ do português.",
+      "gesture": "Em /i/, a língua fica alta e anterior; em /ɪ/, experimente uma posição um pouco mais baixa e central. Compare o som, não apenas a duração.",
+      "reflectionPrompt": "Percebi mudança de qualidade entre sheep e ship?",
+      "note": "Live nesta sessão é o verbo morar, /lɪv/, não o adjetivo “ao vivo”, /laɪv/.",
+      "sources": [
+        "vowels"
+      ]
+    },
+    {
+      "id": "s19",
+      "order": 19,
+      "title": "Duas vogais: bed e bad",
+      "family": "Contrastes vocálicos",
+      "accent": "en-US",
+      "level": "A2–B1",
+      "targets": [
+        "ɛ",
+        "æ"
+      ],
+      "words": [
+        {
+          "text": "bed",
+          "ipa": "bɛd",
+          "meaning": "cama"
+        },
+        {
+          "text": "bad",
+          "ipa": "bæd",
+          "meaning": "ruim"
+        },
+        {
+          "text": "men",
+          "ipa": "mɛn",
+          "meaning": "homens"
+        },
+        {
+          "text": "man",
+          "ipa": "mæn",
+          "meaning": "homem"
+        }
+      ],
+      "phrase": {
+        "text": "The man is here.",
+        "ipa": "ðə mæn ɪz hɪr",
+        "meaning": "O homem está aqui."
+      },
+      "objective": "Distinguir /ɛ/ de /æ/ sem depender apenas da letra escrita.",
+      "gesture": "Para /æ/, experimente abrir um pouco mais a mandíbula e baixar a língua em relação a /ɛ/. Escute bed/bad antes de comparar men/man.",
+      "reflectionPrompt": "Bed e bad soaram diferentes sem apenas alongar a vogal?",
+      "note": "No inglês americano, /æ/ antes de nasais pode elevar-se ou ditongar. Use bed/bad como contraste inicial mais estável.",
+      "sources": [
+        "vowels"
+      ]
+    },
+    {
+      "id": "s20",
+      "order": 20,
+      "title": "Duas vogais: fool e full",
+      "family": "Contrastes vocálicos",
+      "accent": "en-US",
+      "level": "A2–B1",
+      "targets": [
+        "u",
+        "ʊ"
+      ],
+      "words": [
+        {
+          "text": "fool",
+          "ipa": "ful",
+          "meaning": "tolo"
+        },
+        {
+          "text": "full",
+          "ipa": "fʊl",
+          "meaning": "cheio"
+        },
+        {
+          "text": "pool",
+          "ipa": "pul",
+          "meaning": "piscina"
+        },
+        {
+          "text": "pull",
+          "ipa": "pʊl",
+          "meaning": "puxar"
+        }
+      ],
+      "phrase": {
+        "text": "The pool is full.",
+        "ipa": "ðə pul ɪz fʊl",
+        "meaning": "A piscina está cheia."
+      },
+      "objective": "Explorar /u/ e /ʊ/ como qualidades diferentes.",
+      "gesture": "Para /ʊ/, experimente uma posição um pouco mais baixa e central da língua do que em /u/. Não diferencie as palavras somente alongando o som.",
+      "reflectionPrompt": "Pool e pull tiveram qualidades diferentes para mim?",
+      "note": "A posição de /u/ varia entre falantes americanos. Os contrastes importam mais que uma posição rígida da língua.",
+      "sources": [
+        "vowels"
+      ]
+    }
+  ]
+}

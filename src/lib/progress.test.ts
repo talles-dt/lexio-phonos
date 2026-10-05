@@ -24,7 +24,7 @@ describe("practice data contract", () => {
       "{}",
       "null",
       "not json",
-      JSON.stringify({ ...emptyProgress(), version: 2 }),
+      JSON.stringify({ ...emptyProgress(), version: 99 }),
       JSON.stringify({
         ...emptyProgress(),
         attempts: [{ ...attempt, durationSeconds: null }],

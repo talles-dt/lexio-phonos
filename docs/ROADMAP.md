@@ -29,3 +29,10 @@ Cada R1–R11 precisa ser associado a implementação e evidência no relatório
 ## Situação da entrega
 
 R1–R11 implementados nesta branch. Consulte a matriz de evidências em [AUDIT.md](AUDIT.md). A implementação foi verificada localmente; a entrega por PR não implica merge nem ativação em produção.
+
+
+## Segunda entrega: sessões para brasileiros
+
+20 sessões em sete famílias, 16 com foco em finais de palavras; instruções em português, referência americana geral e modelo sintético local provisório. Implementação e contratos em [GUIDED_SESSIONS.md](GUIDED_SESSIONS.md). As sessões incluem gravação de palavras/frase, autorreflexão, retomada e migração preservando o histórico.
+
+Esta segunda entrega é para preview. Permanecem pendentes o piloto com alunos, a revisão pedagógica humana e a validação com microfones reais Android/Chrome e iPhone/Safari. Áudios humanos, revisão espaçada automática e retenção local de áudio ficam para entregas posteriores.

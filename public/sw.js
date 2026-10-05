@@ -1,5 +1,5 @@
 // Only public application assets belong in this cache. Personal API requests are never cached.
-const CACHE = "lexio-phonos-v2";
+const CACHE = "lexio-phonos-v3";
 const SHELL = [
   "/",
   "/manifest.json",
@@ -54,6 +54,7 @@ async function prepareOffline(client) {
   }
 }
 self.addEventListener("message", (event) => {
+  if (event.data === "claim-client") event.waitUntil(self.clients.claim());
   if (event.data === "prepare-offline")
     event.waitUntil(prepareOffline(event.source).catch(() => {}));
   if (event.data === "check-offline")
